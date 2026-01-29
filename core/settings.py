@@ -105,6 +105,9 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+# settings.py
+AUTH_USER_MODEL = "accounts.User"
+
 
 
 # Internationalization
@@ -128,3 +131,24 @@ JWT_SECRET_KEY = SECRET_KEY
 JWT_ALGORITHM = "HS256"
 JWT_ACCESS_TOKEN_EXPIRE_MINUTES = 30
 JWT_REFRESH_TOKEN_EXPIRE_DAYS = 7
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+
+EMAIL_HOST = os.getenv("EMAIL_HOST")
+EMAIL_PORT = os.getenv("EMAIL_PORT")
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS")
+
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL")
+
+
+# from django.core.mail import send_mail
+#
+# send_mail(
+#     subject="SMTP Test",
+#     message="If you received this, SMTP works 🎉",
+#     from_email=None,
+#     recipient_list=["urja@simpalm.com"],
+# )

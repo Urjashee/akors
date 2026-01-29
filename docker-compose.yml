@@ -21,5 +21,10 @@ services:
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@local.dev
       PGADMIN_DEFAULT_PASSWORD: admin
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
     depends_on:
       - db
+
+volumes:
+  pgadmin_data:
