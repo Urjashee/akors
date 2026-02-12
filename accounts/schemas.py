@@ -1,10 +1,13 @@
 from typing import Optional, Any
 from pydantic import BaseModel, EmailStr, Field
 
-class UserOutSchema(BaseModel):
+class SuccessSchema(BaseModel):
     status: str
-    message: Any
-    data: Optional[Any]
+    message: str
+    data: Optional[Any] = None
+
+    class Config:
+        exclude_none = True
 
 class ErrorSchema(BaseModel):
     status: str
@@ -33,3 +36,11 @@ class VerifyEmailSchema(BaseModel):
     token: str
     user_id: int
     type: int
+    password: Optional[str] = None
+
+class EmailSchema(BaseModel):
+    email: str
+
+class LoginSchema(BaseModel):
+    email: str
+    password: str

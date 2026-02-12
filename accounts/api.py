@@ -1,20 +1,23 @@
 import secrets
+from datetime import timedelta
 
+from django.contrib.auth import user_logged_in
 from django.utils import timezone
 from ninja import Router
-from .schemas import UserOutSchema, ErrorSchema, RegisterSchema, VerifyEmailSchema
+
+from .jwt import create_access_token, create_refresh_token
+from .schemas import SuccessSchema, ErrorSchema, RegisterSchema, VerifyEmailSchema, EmailSchema, LoginSchema
 from .models import User, PasswordResets, Role, Title
-from .services import send_welcome_email
+from .services import send_welcome_email, send_reset_email
 from django.db import transaction
 
 router = Router(tags=["accounts"])
-
 
 @router.post(
     "/operator/register",
     auth=None,
     response={
-        200: UserOutSchema,
+        200: SuccessSchema,
         400: ErrorSchema,
     },
 )
@@ -45,7 +48,12 @@ def register(request, payload: RegisterSchema):
                             "status": "ERROR",
                             "message": "Could not create password reset token. Please try again later.",
                         }
-                    send_welcome_email(existing_user, token, type=1)
+                    email_sent = send_welcome_email(existing_user, token, type=1)
+                    if not email_sent == 1:
+                        return 400, {
+                            "status": "ERROR",
+                            "message": "Could not send email. Please try again later.",
+                        }
                     return 200, {
                         "status": "SUCCESS",
                         "message": "Successfully created operator account.",
@@ -57,7 +65,7 @@ def register(request, payload: RegisterSchema):
                         },
                     }
                 return 400, {
-                    "status": "EMAIL_EXISTS",
+                    "status": "ERROR",
                     "message": "Email already registered",
                 }
 
@@ -125,12 +133,11 @@ def register(request, payload: RegisterSchema):
         },
     }
 
-
 @router.post(
     "/verify",
     auth=None,
     response={
-        200: UserOutSchema,
+        200: SuccessSchema,
         400: ErrorSchema,
     },
 )
@@ -169,4 +176,169 @@ def verify_email(request, payload: VerifyEmailSchema):
     return 200, {
         "status": "SUCCESS",
         "message": "Email verified successfully",
+    }
+
+@router.post(
+    "/forgot-password",
+    auth=None,
+    response={
+        200: SuccessSchema,
+        400: ErrorSchema,
+    },
+)
+def forgot_password_request(request, payload: EmailSchema):
+    token = secrets.token_urlsafe(32)
+    try:
+        with transaction.atomic():
+            user = User.objects.get(email=payload.email)
+            if not user:
+                return 400, {
+                    "status": "ERROR",
+                    "message": "No user found.",
+                }
+
+            if user.email_verified_at is None:
+                return 400, {
+                    "status": "ERROR",
+                    "message": "No user found.",
+                }
+            five_minutes_ago = timezone.now() - timedelta(minutes=1)
+
+            recent_request_exists = PasswordResets.objects.filter(
+                user=user,
+                type=2,
+                created_at__gte=five_minutes_ago,
+                active=True
+            ).exists()
+
+            if recent_request_exists:
+                return 400, {
+                    "status": "ERROR",
+                    "message": "A password reset email was already sent recently. Please wait 5 minutes.",
+                }
+
+            password_resets = PasswordResets.objects.create(
+                email=payload.email,
+                token=token,
+                type=2,
+                user=user
+            )
+            if not password_resets:
+                return 400, {
+                    "status": "ERROR",
+                    "message": "Could not create password reset token. Please try again later.",
+                }
+
+            email_sent = send_reset_email(user, token, type=2)
+            if not email_sent == 1:
+                return 400, {
+                    "status": "ERROR",
+                    "message": "Could not send email. Please try again later.",
+                }
+
+    except Exception as e:
+        return 400, {
+            "status": "ERROR",
+            "message": "Could not verify email.",
+        }
+
+    return 200, {
+        "status": "SUCCESS",
+        "message": "Password reset request sent successfully.",
+    }
+
+@router.post(
+    "/reset-password",
+    auth=None,
+    response={
+        200: SuccessSchema,
+        400: ErrorSchema,
+    },
+)
+def reset_password_request(request, payload: VerifyEmailSchema):
+
+    try:
+        with transaction.atomic():
+            resent_request_exists = PasswordResets.objects.get(
+                token=payload.token,
+                type=2,
+                active=True
+            )
+            user = User.objects.get(email=resent_request_exists.email)
+            if not user:
+                return 400, {
+                    "status": "ERROR",
+                    "message": "No user found.",
+                }
+
+            if user.check_password(payload.password):
+                return 400, {
+                    "status": "ERROR",
+                    "message": "Password cannot be same as your previous one.",
+                }
+
+            user.set_password(payload.password)
+            user.save()
+
+            if not resent_request_exists:
+                return 400, {
+                    "status": "ERROR",
+                    "message": "No associated password reset token. Please try again later.",
+                }
+            resent_request_exists.active = False
+            resent_request_exists.save(update_fields=["active"])
+
+    except Exception as e:
+        return 400, {
+            "status": "ERROR",
+            "message": "Could not verify email.",
+        }
+
+    return 200, {
+        "status": "SUCCESS",
+        "message": "Password reset successfully.",
+    }
+
+@router.post(
+    "/operator/login",
+    auth=None,
+    response={
+        200: SuccessSchema,
+        400: ErrorSchema,
+    },
+)
+def operator_login(request, payload: LoginSchema):
+    try:
+        with transaction.atomic():
+            user = User.objects.filter(email=payload.email).first()
+            if not user:
+                return 400, {
+                    "status": "ERROR",
+                    "message": "No user found.",
+                }
+            if not user.check_password(payload.password):
+                return 400, {
+                    "status": "ERROR",
+                    "message": "Invalid email or password.",
+                }
+
+            if user.email_verified_at is None:
+                return 400, {
+                    "status": "ERROR",
+                    "message": "Please verify your email first.",
+                }
+
+    except Exception as e:
+        return 400, {
+            "status": "ERROR",
+            "message": "Could not verify email.",
+        }
+
+    return 200, {
+        "status": "SUCCESS",
+        "message": "Login successful.",
+        "data": {
+            "access_token": create_access_token(user),
+            "refresh_token": create_refresh_token(user)
+        }
     }

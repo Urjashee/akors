@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 
 class Title(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -32,6 +32,38 @@ class Subscriptions(models.Model):
     def __str__(self):
         return self.name
 
+class UserManager(BaseUserManager):
+    def create_user(self, email, password=None, **extra_fields):
+        if not email:
+            raise ValueError("Email is required")
+
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)
+        user.is_active = True
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email, password=None, **extra_fields):
+        from accounts.models import Role
+
+        try:
+            admin_role = Role.objects.get(name="Super admin")
+        except Role.DoesNotExist:
+            raise ValueError("Admin role does not exist. Create it first.")
+
+        user = self.model(
+            email=self.normalize_email(email),
+            role=admin_role,  # 🔥 FORCE role
+            is_staff=True,
+            is_superuser=True,
+            is_active=True,
+            **extra_fields,
+        )
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
 
 class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
@@ -44,8 +76,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     phone_number = models.CharField(max_length=100)
 
     email_verified_at = models.DateTimeField(null=True)
-    is_active = models.BooleanField(default=False)
-    is_admin = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)  # ✅ ADD THIS
+    is_admin = models.BooleanField(default=False)  # ✅ ADD THIS
     is_subscribed = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -55,10 +88,13 @@ class User(AbstractBaseUser, PermissionsMixin):
     title = models.ForeignKey(Title, on_delete=models.PROTECT, related_name="users", null=True, blank=True)
     subscription = models.ForeignKey(Subscriptions, on_delete=models.PROTECT, related_name="users", null=True, blank=True)
 
+    objects = UserManager()  # ✅ THIS FIXES THE ERROR
+
     USERNAME_FIELD = "email"
 
     class Meta:
         db_table = "users"
+
 
 class PasswordResets(models.Model):
     email = models.EmailField()

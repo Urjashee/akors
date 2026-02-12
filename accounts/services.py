@@ -23,3 +23,24 @@ def send_welcome_email(user, token, type):
     sent_count = email.send()
 
     return sent_count
+
+def send_reset_email(user, token, type):
+    subject = "Mail from Akors"
+    from_email = settings.DEFAULT_FROM_EMAIL
+    to = [user.email]
+
+    html_content = render_to_string(
+        "emails/forgot_password.html",
+        {
+            "user": user,
+            "token": token,
+            "site": os.getenv("SITE_NAME"),
+            "type": type
+        }
+    )
+
+    email = EmailMultiAlternatives(subject, "", from_email, to)
+    email.attach_alternative(html_content, "text/html")
+    sent_count = email.send()
+
+    return sent_count
