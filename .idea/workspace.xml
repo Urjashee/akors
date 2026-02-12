@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="ce36cd79-88f8-4785-a33a-63a9a78cb165" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/akors-backend.iml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/accounts/api.py" beforeDir="false" afterPath="$PROJECT_DIR$/accounts/api.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/accounts/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/accounts/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/base/13844/pg_internal.init" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/base/16384/1249" beforeDir="false" afterPath="$PROJECT_DIR$/data/base/16384/1249" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/base/16384/16385" beforeDir="false" afterPath="$PROJECT_DIR$/data/base/16384/16385" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/base/16384/16386" beforeDir="false" afterPath="$PROJECT_DIR$/data/base/16384/16386" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/base/16384/16391" beforeDir="false" afterPath="$PROJECT_DIR$/data/base/16384/16391" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/base/16384/16394" beforeDir="false" afterPath="$PROJECT_DIR$/data/base/16384/16394" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/base/16384/16402" beforeDir="false" afterPath="$PROJECT_DIR$/data/base/16384/16402" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/base/16384/16549" beforeDir="false" afterPath="$PROJECT_DIR$/data/base/16384/16549" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/base/16384/16651" beforeDir="false" afterPath="$PROJECT_DIR$/data/base/16384/16651" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/base/16384/32772" beforeDir="false" afterPath="$PROJECT_DIR$/data/base/16384/32772" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/base/16384/32774" beforeDir="false" afterPath="$PROJECT_DIR$/data/base/16384/32774" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/base/16384/32775" beforeDir="false" afterPath="$PROJECT_DIR$/data/base/16384/32775" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/base/16384/32776" beforeDir="false" afterPath="$PROJECT_DIR$/data/base/16384/32776" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/base/16384/32777" beforeDir="false" afterPath="$PROJECT_DIR$/data/base/16384/32777" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/base/16384/32778" beforeDir="false" afterPath="$PROJECT_DIR$/data/base/16384/32778" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/base/16384/32779" beforeDir="false" afterPath="$PROJECT_DIR$/data/base/16384/32779" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/base/16384/32794" beforeDir="false" afterPath="$PROJECT_DIR$/data/base/16384/32794" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/base/16384/32795" beforeDir="false" afterPath="$PROJECT_DIR$/data/base/16384/32795" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/base/16384/32796" beforeDir="false" afterPath="$PROJECT_DIR$/data/base/16384/32796" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/base/16384/pg_internal.init" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/global/pg_control" beforeDir="false" afterPath="$PROJECT_DIR$/data/global/pg_control" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/global/pg_internal.init" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/pg_stat_tmp/db_0.stat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/pg_stat_tmp/db_13844.stat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/pg_stat_tmp/db_16384.stat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/pg_stat_tmp/global.stat" beforeDir="false" afterPath="$PROJECT_DIR$/data/pg_stat_tmp/global.stat" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/pg_wal/000000010000000000000001" beforeDir="false" afterPath="$PROJECT_DIR$/data/pg_wal/000000010000000000000001" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/pg_xact/0000" beforeDir="false" afterPath="$PROJECT_DIR$/data/pg_xact/0000" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/postmaster.pid" beforeDir="false" afterPath="$PROJECT_DIR$/data/postmaster.pid" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pyproject.toml" beforeDir="false" afterPath="$PROJECT_DIR$/pyproject.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/uv.lock" beforeDir="false" afterPath="$PROJECT_DIR$/uv.lock" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="DjangoConsoleOptions" custom-start-script="import sys; print('Python %s on %s' % (sys.version, sys.platform))&#10;import django; print('Django %s' % django.get_version())&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;if 'setup' in dir(django): django.setup()&#10;import django_manage_shell; django_manage_shell.run(PROJECT_ROOT)">
+    <option name="myCustomStartScript" value="import sys; print('Python %s on %s' % (sys.version, sys.platform))&#10;import django; print('Django %s' % django.get_version())&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;if 'setup' in dir(django): django.setup()&#10;import django_manage_shell; django_manage_shell.run(PROJECT_ROOT)" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "customColor": "",
+  "associatedIndex": 5
+}]]></component>
+  <component name="ProjectId" id="39ZhXoU5xfgusEsVUKjSvUKrbYC" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenDjangoStructureViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "dev",
+    "node.js.detected.package.eslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RunManager">
+    <configuration name="akors-backend" type="Python.DjangoServer" factoryName="Django server">
+      <module name="akors-backend" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="launchJavascriptDebuger" value="false" />
+      <option name="port" value="8000" />
+      <option name="host" value="" />
+      <option name="additionalOptions" value="" />
+      <option name="browserUrl" value="" />
+      <option name="runTestServer" value="false" />
+      <option name="runNoReload" value="false" />
+      <option name="useCustomRunCommand" value="false" />
+      <option name="customRunCommand" value="" />
+      <method v="2" />
+    </configuration>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-822845ee3bb5-JavaScript-PY-243.23654.177" />
+        <option value="bundled-python-sdk-91d3a02ef49d-43b77aa2d136-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-243.23654.177" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="ce36cd79-88f8-4785-a33a-63a9a78cb165" name="Changes" comment="" />
+      <created>1770909547079</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1770909547079</updated>
+      <workItem from="1770909548842" duration="272000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>

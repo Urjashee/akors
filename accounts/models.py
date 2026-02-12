@@ -71,12 +71,12 @@ class User(AbstractBaseUser, PermissionsMixin):
     last_name = models.CharField(max_length=100)
 
     qei_number = models.CharField(max_length=100, null=True)
-    company_name = models.CharField(max_length=100)
-    company_address = models.CharField(max_length=500)
-    phone_number = models.CharField(max_length=100)
+    company_name = models.CharField(max_length=100, null=True, blank=True)
+    company_address = models.CharField(max_length=500, null=True, blank=True)
+    phone_number = models.CharField(max_length=100, null=True, blank=True)
 
     email_verified_at = models.DateTimeField(null=True)
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)  # ✅ ADD THIS
     is_admin = models.BooleanField(default=False)  # ✅ ADD THIS
     is_subscribed = models.BooleanField(default=False)

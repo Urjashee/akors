@@ -27,7 +27,7 @@ def register(request, payload: RegisterSchema):
     title_data = Title.objects.get(id=payload.title)
     try:
         with transaction.atomic():
-            existing_user = User.objects.get(email=payload.email)
+            existing_user = User.objects.filter(email=payload.email).first()
             if existing_user:
                 if existing_user.email_verified_at is None:
                     existing_user.password = payload.password
@@ -81,7 +81,7 @@ def register(request, payload: RegisterSchema):
             if not user:
                 return 400, {
                     "status": "ERROR",
-                    "message": "Could not register user 2!",
+                    "message": "Could not register user!",
                 }
             user.set_password(payload.password)
             user.save()
@@ -115,11 +115,13 @@ def register(request, payload: RegisterSchema):
             "message": "Invalid title.",
         }
 
-    except Exception:
-        # Any error here → full rollback
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()  # prints full stacktrace in console/logs
         return 400, {
             "status": "ERROR",
-            "message": "Registration failed. Please try again.",
+            "message": str(e),
         }
 
     return 200, {
