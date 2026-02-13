@@ -12,7 +12,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - /var/www/akors-backend/data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
 
   pgadmin:
     image: dpage/pgadmin4
@@ -44,4 +44,5 @@ services:
 #      - db
 
 volumes:
+  postgres_data:
   pgadmin_data:

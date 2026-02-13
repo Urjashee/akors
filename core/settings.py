@@ -28,7 +28,9 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 DEBUG = os.getenv("DEBUG")
 
 ALLOWED_HOSTS = [
-    "3.236.244.132"
+    "3.236.244.132",
+    "127.0.0.1:8000",
+    "localhost"
 ]
 
 

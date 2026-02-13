@@ -7,9 +7,7 @@
     <list default="true" id="ce36cd79-88f8-4785-a33a-63a9a78cb165" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/core/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/settings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/pg_stat_tmp/db_0.stat" beforeDir="false" afterPath="$PROJECT_DIR$/data/pg_stat_tmp/db_0.stat" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/pg_stat_tmp/db_16384.stat" beforeDir="false" afterPath="$PROJECT_DIR$/data/pg_stat_tmp/db_16384.stat" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/pg_stat_tmp/global.stat" beforeDir="false" afterPath="$PROJECT_DIR$/data/pg_stat_tmp/global.stat" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker-compose.staging.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.staging.yml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -95,7 +93,7 @@
       <option name="presentableId" value="Default" />
       <updated>1770909547079</updated>
       <workItem from="1770909548842" duration="1782000" />
-      <workItem from="1770965724103" duration="3713000" />
+      <workItem from="1770965724103" duration="4430000" />
     </task>
     <servers />
   </component>
