@@ -1,15 +1,16 @@
 import secrets
 from datetime import timedelta
 
-from django.contrib.auth import user_logged_in
 from django.utils import timezone
 from ninja import Router
+from django.db import transaction
 
 from .jwt import create_access_token, create_refresh_token
 from .schemas import SuccessSchema, ErrorSchema, RegisterSchema, VerifyEmailSchema, EmailSchema, LoginSchema
 from .models import User, PasswordResets, Role, Title
-from .services import send_welcome_email, send_reset_email
-from django.db import transaction
+from .services import send_welcome_email, send_reset_email, operator_sign_up_email
+from .constants import WELCOME_EMAIL, FORGOT_PASSWORD_EMAIL, OPERATOR_SIGN_UP_EMAIL
+
 
 router = Router(tags=["accounts"])
 
@@ -21,7 +22,7 @@ router = Router(tags=["accounts"])
         400: ErrorSchema,
     },
 )
-def register(request, payload: RegisterSchema):
+def operator_register(request, payload: RegisterSchema):
     token = secrets.token_urlsafe(32)
     role = Role.objects.get(id=3)
     title_data = Title.objects.get(id=payload.title)
@@ -48,7 +49,7 @@ def register(request, payload: RegisterSchema):
                             "status": "ERROR",
                             "message": "Could not create password reset token. Please try again later.",
                         }
-                    email_sent = send_welcome_email(existing_user, token, type=1)
+                    email_sent = send_welcome_email(existing_user, token, type=WELCOME_EMAIL)
                     if not email_sent == 1:
                         return 400, {
                             "status": "ERROR",
@@ -88,7 +89,7 @@ def register(request, payload: RegisterSchema):
             password_resets = PasswordResets.objects.create(
                 email=user.email,
                 token=token,
-                type=1,
+                type=WELCOME_EMAIL,
                 user=user
             )
             if not password_resets:
@@ -132,6 +133,103 @@ def register(request, payload: RegisterSchema):
             "first_name": user.first_name,
             "last_name": user.last_name,
             "qei_number": user.qei_number,
+        },
+    }
+
+@router.post(
+    "/property_manager/register",
+    auth=None,
+    response={
+        200: SuccessSchema,
+        400: ErrorSchema,
+    },
+)
+def property_manager_register(request, payload: RegisterSchema):
+    token = secrets.token_urlsafe(32)
+    role = Role.objects.get(id=2)
+    try:
+        with transaction.atomic():
+            existing_user = User.objects.filter(email=payload.email).first()
+            if existing_user:
+                if existing_user.email_verified_at is None:
+                    existing_user.first_name = payload.first_name
+                    existing_user.last_name = payload.last_name
+                    existing_user.company_name = payload.company_name
+                    existing_user.company_address = payload.company_address
+                    existing_user.phone_number = payload.phone_number
+                    existing_user.role = role
+                    existing_user.save()
+
+                    email_sent = operator_sign_up_email(existing_user, token, type=OPERATOR_SIGN_UP_EMAIL)
+                    if not email_sent == 1:
+                        return 400, {
+                            "status": "ERROR",
+                            "message": "Could not send email. Please try again later.",
+                        }
+                    return 200, {
+                        "status": "SUCCESS",
+                        "message": "Successfully created operator account.",
+                        "data": {
+                            "email": existing_user.email,
+                            "first_name": existing_user.first_name,
+                            "last_name": existing_user.last_name,
+                        },
+                    }
+                return 400, {
+                    "status": "ERROR",
+                    "message": "Email already registered",
+                }
+
+            user = User.objects.create(
+                email=payload.email,
+                first_name=payload.first_name,
+                last_name=payload.last_name,
+                company_name=payload.company_name,
+                company_address=payload.company_address,
+                phone_number=payload.phone_number,
+                role=role,
+            )
+            if not user:
+                return 400, {
+                    "status": "ERROR",
+                    "message": "Could not register user!",
+                }
+            user.save()
+
+            email_sent = operator_sign_up_email(user, token, type=OPERATOR_SIGN_UP_EMAIL)
+            if not email_sent == 1:
+                return 400, {
+                    "status": "ERROR",
+                    "message": "Could not send email. Please try again later.",
+                }
+    except Role.DoesNotExist:
+        return 400, {
+            "status": "ERROR",
+            "message": "Invalid role.",
+        }
+
+    except Title.DoesNotExist:
+        return 400, {
+            "status": "ERROR",
+            "message": "Invalid title.",
+        }
+
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()  # prints full stacktrace in console/logs
+        return 400, {
+            "status": "ERROR",
+            "message": str(e),
+        }
+
+    return 200, {
+        "status": "SUCCESS",
+        "message": "Successfully created operator account.",
+        "data": {
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
         },
     }
 
@@ -231,7 +329,7 @@ def forgot_password_request(request, payload: EmailSchema):
                     "message": "Could not create password reset token. Please try again later.",
                 }
 
-            email_sent = send_reset_email(user, token, type=2)
+            email_sent = send_reset_email(user, token, type=FORGOT_PASSWORD_EMAIL)
             if not email_sent == 1:
                 return 400, {
                     "status": "ERROR",
@@ -309,7 +407,7 @@ def reset_password_request(request, payload: VerifyEmailSchema):
         400: ErrorSchema,
     },
 )
-def operator_login(request, payload: LoginSchema):
+def login(request, payload: LoginSchema):
     try:
         with transaction.atomic():
             user = User.objects.filter(email=payload.email).first()

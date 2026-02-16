@@ -15,7 +15,7 @@ class ErrorSchema(BaseModel):
 
 class RegisterSchema(BaseModel):
     email: str
-    password: str = Field(min_length=8)
+    password: Optional[str] = None
 
     first_name: str
     last_name: str
