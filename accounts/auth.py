@@ -15,7 +15,8 @@ def get_user_from_token(token: str):
         if payload.get("type") != "access":
             return None
 
-        user_id = payload.get("sub")
+        user_id = payload.get("id")
+
         return User.objects.filter(id=user_id).first()
 
     except JWTError:

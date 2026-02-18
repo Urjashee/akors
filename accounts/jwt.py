@@ -10,6 +10,7 @@ def create_access_token(user: any):
         "last_name": str(user.last_name),
         "is_subscribed": str(user.is_subscribed),
         "subscription_id": str(user.subscription),
+        "role": str(user.role),
         "type": "access",
         "exp": datetime.utcnow() + timedelta(
             minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES
@@ -26,6 +27,7 @@ def create_refresh_token(user: any):
         "last_name": str(user.last_name),
         "is_subscribed": str(user.is_subscribed),
         "subscription_id": str(user.subscription),
+        "role": str(user.role),
         "type": "refresh",
         "exp": datetime.utcnow() + timedelta(
             days=settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS

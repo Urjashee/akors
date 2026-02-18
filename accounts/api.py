@@ -4,15 +4,19 @@ from datetime import timedelta
 from django.utils import timezone
 from ninja import Router
 from django.db import transaction
+from django.db.models import F
+
+from ninja import Query
 
 from .jwt import create_access_token, create_refresh_token
-from .schemas import SuccessSchema, ErrorSchema, RegisterSchema, VerifyEmailSchema, EmailSchema, LoginSchema
+from .schemas import SuccessSchema, ErrorSchema, RegisterSchema, VerifyEmailSchema, EmailSchema, LoginSchema, \
+    UserFilterSchema, CreatePasswordSchema
 from .models import User, PasswordResets, Role, Title
-from .services import send_welcome_email, send_reset_email, operator_sign_up_email
-from .constants import WELCOME_EMAIL, FORGOT_PASSWORD_EMAIL, OPERATOR_SIGN_UP_EMAIL
-
+from .services import send_welcome_email, send_reset_email, operator_sign_up_email, create_password_email
+from .constants import WELCOME_EMAIL, FORGOT_PASSWORD_EMAIL, OPERATOR_SIGN_UP_EMAIL, CREATE_PASSWORD_EMAIL
 
 router = Router(tags=["accounts"])
+
 
 @router.post(
     "/operator/register",
@@ -31,7 +35,7 @@ def operator_register(request, payload: RegisterSchema):
             existing_user = User.objects.filter(email=payload.email).first()
             if existing_user:
                 if existing_user.email_verified_at is None:
-                    existing_user.password = payload.password
+                    existing_user.set_password(payload.password)
                     existing_user.first_name = payload.first_name
                     existing_user.last_name = payload.last_name
                     existing_user.title = title_data
@@ -41,13 +45,13 @@ def operator_register(request, payload: RegisterSchema):
                     password_resets = PasswordResets.objects.create(
                         email=existing_user.email,
                         token=token,
-                        type=1,
+                        type=WELCOME_EMAIL,
                         user=existing_user
                     )
                     if not password_resets:
                         return 400, {
                             "status": "ERROR",
-                            "message": "Could not create password reset token. Please try again later.",
+                            "message": "Could not create password token. Please try again later.",
                         }
                     email_sent = send_welcome_email(existing_user, token, type=WELCOME_EMAIL)
                     if not email_sent == 1:
@@ -135,6 +139,7 @@ def operator_register(request, payload: RegisterSchema):
             "qei_number": user.qei_number,
         },
     }
+
 
 @router.post(
     "/property_manager/register",
@@ -233,6 +238,7 @@ def property_manager_register(request, payload: RegisterSchema):
         },
     }
 
+
 @router.post(
     "/verify",
     auth=None,
@@ -264,8 +270,10 @@ def verify_email(request, payload: VerifyEmailSchema):
 
             # verify user
             user = reset.user
+            user.is_active = True
+            user.is_approved = True
             user.email_verified_at = timezone.now()
-            user.save(update_fields=["email_verified_at"])
+            user.save(update_fields=["email_verified_at", "is_active", "is_approved"])
 
     except Exception as e:
         return 400, {
@@ -277,6 +285,7 @@ def verify_email(request, payload: VerifyEmailSchema):
         "status": "SUCCESS",
         "message": "Email verified successfully",
     }
+
 
 @router.post(
     "/forgot-password",
@@ -347,6 +356,7 @@ def forgot_password_request(request, payload: EmailSchema):
         "message": "Password reset request sent successfully.",
     }
 
+
 @router.post(
     "/reset-password",
     auth=None,
@@ -356,7 +366,6 @@ def forgot_password_request(request, payload: EmailSchema):
     },
 )
 def reset_password_request(request, payload: VerifyEmailSchema):
-
     try:
         with transaction.atomic():
             resent_request_exists = PasswordResets.objects.get(
@@ -399,8 +408,9 @@ def reset_password_request(request, payload: VerifyEmailSchema):
         "message": "Password reset successfully.",
     }
 
+
 @router.post(
-    "/operator/login",
+    "/login",
     auth=None,
     response={
         200: SuccessSchema,
@@ -410,7 +420,7 @@ def reset_password_request(request, payload: VerifyEmailSchema):
 def login(request, payload: LoginSchema):
     try:
         with transaction.atomic():
-            user = User.objects.filter(email=payload.email).first()
+            user = User.objects.filter(email=payload.email, is_active=True).first()
             if not user:
                 return 400, {
                     "status": "ERROR",
@@ -442,3 +452,182 @@ def login(request, payload: LoginSchema):
             "refresh_token": create_refresh_token(user)
         }
     }
+
+
+@router.get(
+    "/admin/users",
+    response={
+        200: SuccessSchema,
+        400: ErrorSchema,
+        403: ErrorSchema,
+    },
+)
+def admin_user_list(request, filters: UserFilterSchema = Query(...)):
+    if request.user.role.name != "Super admin":
+        return 403, {
+            "status": "Unauthorized",
+            "message": "Permission denied. Super admin only.",
+        }
+    try:
+        users = User.objects.select_related("role").all()
+
+        if filters.status:
+
+            if filters.status == "verified_operator":
+                users = users.filter(
+                    email_verified_at__isnull=False,
+                    role_id=3
+                )
+
+            elif filters.status == "verified_property_manager":
+                users = users.filter(
+                    email_verified_at__isnull=False,
+                    is_approved=True,
+                    role_id=2
+                )
+
+            elif filters.status == "pending_property_manager":
+                users = users.filter(
+                    email_verified_at__isnull=True,
+                    is_approved=False,
+                    role_id=2
+                )
+
+        users = users.annotate(
+            role_name=F("role__name"),
+            subscription_name=F("subscription__name")
+        )
+
+        return 200, {
+            "status": "SUCCESS",
+            "message": "Users fetched successfully.",
+            "data": list(users.values(
+                "id",
+                "email",
+                "first_name",
+                "last_name",
+                "email_verified_at",
+                "is_active",
+                "role_id",
+                "role__name",
+                "subscription__name"
+            ))
+        }
+
+    except Exception:
+        return 400, {
+            "status": "ERROR",
+            "message": "Could not fetch users.",
+        }
+
+
+@router.post(
+    "/admin/user-approve/{user_id}",
+    response={
+        200: SuccessSchema,
+        400: ErrorSchema,
+        403: ErrorSchema,
+    },
+)
+def approve_user(request, user_id: int):
+    if request.user.role.name != "Super admin":
+        return 403, {
+            "status": "Unauthorized",
+            "message": "Permission denied. Super admin only.",
+        }
+
+    token = secrets.token_urlsafe(32)
+
+    try:
+        with transaction.atomic():
+
+            user = User.objects.filter(id=user_id, role_id=2).first()
+            if not user:
+                return 400, {
+                    "status": "ERROR",
+                    "message": "No user found.",
+                }
+            user.is_approved = True
+            user.save(update_fields=["is_approved"])
+            password_resets = PasswordResets.objects.create(
+                email=user.email,
+                token=token,
+                type=CREATE_PASSWORD_EMAIL,
+                user=user
+            )
+            if not password_resets:
+                return 400, {
+                    "status": "ERROR",
+                    "message": "Could not create email token. Please try again later.",
+                }
+            email_sent = create_password_email(user, token, type=CREATE_PASSWORD_EMAIL)
+            if not email_sent == 1:
+                return 400, {
+                    "status": "ERROR",
+                    "message": "Could not send email. Property manager approved.",
+                }
+            return 200, {
+                "status": "SUCCESS",
+                "message": "Successfully approved property manager.",
+            }
+
+    except Exception:
+        return 400, {
+            "status": "ERROR",
+            "message": "Could not fetch users.",
+        }
+
+
+@router.post(
+    "/create-password",
+    auth=None,
+    response={
+        200: SuccessSchema,
+        400: ErrorSchema,
+    },
+)
+def create_password(request, payload: CreatePasswordSchema):
+    try:
+        with transaction.atomic():
+            reset = (
+                PasswordResets.objects
+                .filter(token=payload.token, active=True)
+                .select_related("user")
+                .order_by("-id")
+                .first()
+            )
+
+            if not reset:
+                return 400, {
+                    "status": "ERROR",
+                    "message": "Invalid or expired token.",
+                }
+
+            # deactivate token
+            reset.active = False
+            reset.save(update_fields=["active"])
+
+            # verify user
+            user = reset.user
+            user.set_password(payload.password)
+            user.is_active = True
+            user.is_approved = True
+            user.email_verified_at = timezone.now()
+
+            user.save(update_fields=[
+                "password",
+                "email_verified_at",
+                "is_active",
+                "is_approved",
+            ])
+
+            return 200, {
+                "status": "SUCCESS",
+                "message": "Successfully approved property manager.",
+            }
+
+    except Exception:
+        return 400, {
+            "status": "ERROR",
+            "message": "Could not fetch users.",
+        }

@@ -77,6 +77,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     email_verified_at = models.DateTimeField(null=True)
     is_active = models.BooleanField(default=False)
+    is_approved = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)  # ✅ ADD THIS
     is_admin = models.BooleanField(default=False)  # ✅ ADD THIS
     is_subscribed = models.BooleanField(default=False)

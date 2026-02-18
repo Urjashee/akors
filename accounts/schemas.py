@@ -44,3 +44,11 @@ class EmailSchema(BaseModel):
 class LoginSchema(BaseModel):
     email: str
     password: str
+
+class UserFilterSchema(BaseModel):
+    status: Optional[str] = None
+
+class CreatePasswordSchema(BaseModel):
+    token: str
+    password: str
+    type: int

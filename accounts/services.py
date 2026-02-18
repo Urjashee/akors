@@ -66,3 +66,24 @@ def operator_sign_up_email(user, token, type):
     sent_count = email.send()
 
     return sent_count
+
+def create_password_email(user, token, type):
+    subject = "Welcome to Akors 🎉"
+    from_email = settings.DEFAULT_FROM_EMAIL
+    to = [user.email]
+
+    html_content = render_to_string(
+        "emails/set_password.html",
+        {
+            "user": user,
+            "token": token,
+            "site": os.getenv("SITE_NAME"),
+            "type": type
+        }
+    )
+
+    email = EmailMultiAlternatives(subject, "", from_email, to)
+    email.attach_alternative(html_content, "text/html")
+    sent_count = email.send()
+
+    return sent_count

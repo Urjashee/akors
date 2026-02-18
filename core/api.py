@@ -6,6 +6,7 @@ from accounts.auth import get_user_from_token
 class AuthBearer(HttpBearer):
     def authenticate(self, request, token):
         user = get_user_from_token(token)
+
         if not user:
             return None
 
