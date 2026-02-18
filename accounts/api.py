@@ -454,6 +454,63 @@ def login(request, payload: LoginSchema):
     }
 
 
+@router.post(
+    "/create-password",
+    auth=None,
+    response={
+        200: SuccessSchema,
+        400: ErrorSchema,
+    },
+)
+def create_password(request, payload: CreatePasswordSchema):
+    try:
+        with transaction.atomic():
+            reset = (
+                PasswordResets.objects
+                .filter(token=payload.token, active=True)
+                .select_related("user")
+                .order_by("-id")
+                .first()
+            )
+
+            if not reset:
+                return 400, {
+                    "status": "ERROR",
+                    "message": "Invalid or expired token.",
+                }
+
+            # deactivate token
+            reset.active = False
+            reset.save(update_fields=["active"])
+
+            # verify user
+            user = reset.user
+            user.set_password(payload.password)
+            user.is_active = True
+            user.is_approved = True
+            user.email_verified_at = timezone.now()
+
+            user.save(update_fields=[
+                "password",
+                "email_verified_at",
+                "is_active",
+                "is_approved",
+            ])
+
+            return 200, {
+                "status": "SUCCESS",
+                "message": "Successfully approved property manager.",
+            }
+
+    except Exception:
+        return 400, {
+            "status": "ERROR",
+            "message": "Could not fetch users.",
+        }
+
+
+#  *************************** ADMIN **************************************
+
 @router.get(
     "/admin/users",
     response={
@@ -579,51 +636,38 @@ def approve_user(request, user_id: int):
 
 
 @router.post(
-    "/create-password",
-    auth=None,
+    "/admin/user-toggle/{user_id}",
     response={
         200: SuccessSchema,
         400: ErrorSchema,
+        403: ErrorSchema,
     },
 )
-def create_password(request, payload: CreatePasswordSchema):
+def approve_user(request, user_id: int):
+    if request.user.role.name != "Super admin":
+        return 403, {
+            "status": "Unauthorized",
+            "message": "Permission denied. Super admin only.",
+        }
+
     try:
         with transaction.atomic():
-            reset = (
-                PasswordResets.objects
-                .filter(token=payload.token, active=True)
-                .select_related("user")
-                .order_by("-id")
-                .first()
-            )
 
-            if not reset:
+            user = User.objects.filter(id=user_id, is_approved=True).first()
+            if not user:
                 return 400, {
                     "status": "ERROR",
-                    "message": "Invalid or expired token.",
+                    "message": "No user found.",
                 }
-
-            # deactivate token
-            reset.active = False
-            reset.save(update_fields=["active"])
-
-            # verify user
-            user = reset.user
-            user.set_password(payload.password)
-            user.is_active = True
-            user.is_approved = True
-            user.email_verified_at = timezone.now()
-
-            user.save(update_fields=[
-                "password",
-                "email_verified_at",
-                "is_active",
-                "is_approved",
-            ])
+            if user.is_active:
+                user.is_active = False
+            else:
+                user.is_active = True
+            user.save(update_fields=["is_active"])
 
             return 200, {
                 "status": "SUCCESS",
-                "message": "Successfully approved property manager.",
+                "message": "Successfully updated user status.",
             }
 
     except Exception:
@@ -631,3 +675,6 @@ def create_password(request, payload: CreatePasswordSchema):
             "status": "ERROR",
             "message": "Could not fetch users.",
         }
+
+
+
