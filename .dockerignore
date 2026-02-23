@@ -1,0 +1,22 @@
+# Virtual environment
+.venv
+venv
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Git
+.git
+.gitignore
+
+# Environment files (optional)
+#.env
+
+# Postgres data
+data
+
+# Docker cache
+*.log
