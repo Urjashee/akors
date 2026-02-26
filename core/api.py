@@ -1,5 +1,6 @@
 from ninja import NinjaAPI
 from accounts.api import router as accounts_router
+from stripe_integration.api import router as stripe_router
 from ninja.security import HttpBearer
 from accounts.auth import get_user_from_token
 
@@ -20,3 +21,4 @@ api = NinjaAPI(
 )
 
 api.add_router("/accounts/", accounts_router)
+api.add_router("/stripe/", stripe_router)

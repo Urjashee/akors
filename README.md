@@ -13,3 +13,8 @@ uv run manage.py migrate
 ```text
 uv run manage.py runserver
 ```
+
+#### Container access
+```text
+docker exec -it akors-backend-web-1 bash
+```

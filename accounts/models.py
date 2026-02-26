@@ -74,6 +74,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     company_name = models.CharField(max_length=100, null=True, blank=True)
     company_address = models.CharField(max_length=500, null=True, blank=True)
     phone_number = models.CharField(max_length=100, null=True, blank=True)
+    customer_id = models.CharField(max_length=100, null=True, blank=True)
 
     email_verified_at = models.DateTimeField(null=True)
     is_active = models.BooleanField(default=False)

@@ -11,4 +11,5 @@ dependencies = [
     "psycopg>=3.3.2",
     "django-ninja>=1.5.3",
     "python-jose>=3.5.0",
+    "stripe>=14.3.0",
 ]

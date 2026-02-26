@@ -5,10 +5,27 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ce36cd79-88f8-4785-a33a-63a9a78cb165" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.dockerignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/property/management/commands/seed_states.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/property/management/commands/seed_unit_classes.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/property/management/commands/seed_unit_types.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/stripe_integration/api.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/stripe_integration/schemas.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/stripe_integration/services.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/accounts/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/accounts/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/api.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/api.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/settings.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/forms/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/data.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/forms/admin.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/forms/apps.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/forms/migrations/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/forms/models.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/forms/tests.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/forms/views.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pyproject.toml" beforeDir="false" afterPath="$PROJECT_DIR$/pyproject.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/uv.lock" beforeDir="false" afterPath="$PROJECT_DIR$/uv.lock" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -44,7 +61,7 @@
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;django.template.preview.state&quot;: &quot;SHOW_EDITOR&quot;,
     &quot;git-widget-placeholder&quot;: &quot;dev&quot;,
-    &quot;last_opened_file_path&quot;: &quot;D:/Simpalm/akors/akors-backend/accounts/templates/emails&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/Simpalm/akors/akors-backend/forms/management/commands&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -56,8 +73,12 @@
 }</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="D:\Simpalm\akors\akors-backend\forms\management\commands" />
       <recent name="D:\Simpalm\akors\akors-backend\accounts\templates\emails" />
       <recent name="D:\Simpalm\akors\akors-backend" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\Simpalm\akors\akors-backend\property" />
     </key>
   </component>
   <component name="RunManager">
@@ -109,11 +130,23 @@
       <workItem from="1771416395775" duration="5349000" />
       <workItem from="1771586817073" duration="3789000" />
       <workItem from="1771818714089" duration="662000" />
-      <workItem from="1771827744361" duration="3511000" />
+      <workItem from="1771827744361" duration="24014000" />
+      <workItem from="1771924004874" duration="16315000" />
+      <workItem from="1772087314250" duration="15550000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/accounts/schemas.py</url>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>
