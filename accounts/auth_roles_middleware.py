@@ -4,7 +4,7 @@ from accounts.auth import get_user_from_token
 class SuperAdminAuth(HttpBearer):
     def authenticate(self, request, token):
         user = get_user_from_token(token)
-        print(user)
+        # print(user.role.name)
         if not user:
             return None
 

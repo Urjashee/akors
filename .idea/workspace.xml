@@ -5,15 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ce36cd79-88f8-4785-a33a-63a9a78cb165" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/accounts/auth_roles_middleware.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/accounts/api.py" beforeDir="false" afterPath="$PROJECT_DIR$/accounts/api.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/accounts/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/accounts/auth.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/accounts/jwt.py" beforeDir="false" afterPath="$PROJECT_DIR$/accounts/jwt.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/accounts/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/accounts/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/core/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/settings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/stripe_integration/api.py" beforeDir="false" afterPath="$PROJECT_DIR$/stripe_integration/api.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/stripe_integration/schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/stripe_integration/schemas.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/accounts/auth_roles_middleware.py" beforeDir="false" afterPath="$PROJECT_DIR$/accounts/auth_roles_middleware.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -125,7 +119,7 @@
       <workItem from="1772471784513" duration="1412000" />
       <workItem from="1772509239721" duration="12000" />
       <workItem from="1772701022456" duration="1224000" />
-      <workItem from="1773034032888" duration="10290000" />
+      <workItem from="1773034032888" duration="10461000" />
     </task>
     <servers />
   </component>

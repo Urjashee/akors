@@ -8,7 +8,7 @@ from django.db.models import F
 
 from ninja import Query
 
-from .auth_roles_middleware import SuperAdminAuth
+from .auth_roles_middleware import SuperAdminAuth, PropertyManagerAuth
 from .jwt import create_access_token, create_refresh_token
 from .schemas import SuccessSchema, ErrorSchema, RegisterSchema, VerifyEmailSchema, EmailSchema, LoginSchema, \
     UserFilterSchema, CreatePasswordSchema
@@ -525,11 +525,6 @@ def create_password(request, payload: CreatePasswordSchema):
     },
 )
 def admin_user_list(request, filters: UserFilterSchema = Query(...)):
-    if request.user.role.name != "Super admin":
-        return 403, {
-            "status": "Unauthorized",
-            "message": "Permission denied. Super admin only.",
-        }
     try:
         users = User.objects.select_related("role").all()
 
@@ -585,6 +580,7 @@ def admin_user_list(request, filters: UserFilterSchema = Query(...)):
 
 @router.post(
     "/admin/user-approve/{user_id}",
+    auth=SuperAdminAuth(),
     response={
         200: SuccessSchema,
         400: ErrorSchema,
@@ -642,6 +638,7 @@ def approve_user(request, user_id: int):
 
 @router.post(
     "/admin/user-toggle/{user_id}",
+    auth=SuperAdminAuth(),
     response={
         200: SuccessSchema,
         400: ErrorSchema,
@@ -686,6 +683,7 @@ def approve_user(request, user_id: int):
 
 @router.get(
     "/propert-manger/profile",
+    auth=PropertyManagerAuth(),
     response={
         200: SuccessSchema,
         400: ErrorSchema,
