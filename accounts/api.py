@@ -8,6 +8,7 @@ from django.db.models import F
 
 from ninja import Query
 
+from .auth_roles_middleware import SuperAdminAuth
 from .jwt import create_access_token, create_refresh_token
 from .schemas import SuccessSchema, ErrorSchema, RegisterSchema, VerifyEmailSchema, EmailSchema, LoginSchema, \
     UserFilterSchema, CreatePasswordSchema
@@ -420,6 +421,7 @@ def reset_password_request(request, payload: VerifyEmailSchema):
 def login(request, payload: LoginSchema):
     try:
         with transaction.atomic():
+            print(payload)
             user = User.objects.filter(email=payload.email, is_active=True).first()
             if not user:
                 return 400, {
@@ -438,10 +440,12 @@ def login(request, payload: LoginSchema):
                     "message": "Please verify your email first.",
                 }
 
+
     except Exception as e:
         return 400, {
             "status": "ERROR",
-            "message": "Could not verify email.",
+            "message": str(e),
+
         }
 
     return 200, {
@@ -513,6 +517,7 @@ def create_password(request, payload: CreatePasswordSchema):
 
 @router.get(
     "/admin/users",
+    auth=SuperAdminAuth(),
     response={
         200: SuccessSchema,
         400: ErrorSchema,
@@ -677,4 +682,27 @@ def approve_user(request, user_id: int):
         }
 
 
+#  *************************** PROPERTY MANAGER **************************************
 
+@router.get(
+    "/propert-manger/profile",
+    response={
+        200: SuccessSchema,
+        400: ErrorSchema,
+        403: ErrorSchema,
+    },
+)
+def propert_manager_get_profile(request):
+    if request.user.role.name != "Property manager":
+        return 403, {
+            "status": "Unauthorized",
+            "message": "Permission denied. Property manager only.",
+        }
+    try:
+        users = User.objects.filter(email=request.user.email).first()
+
+    except Exception:
+        return 400, {
+            "status": "ERROR",
+            "message": "Could not fetch users.",
+        }

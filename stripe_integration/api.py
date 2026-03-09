@@ -62,46 +62,41 @@ def create_customer_view(request, payload: CreateCustomerSchema):
 @router.post(
     "/subscription/create",
     # auth=None,
-    response={
-        200: SuccessSchema,
-        400: ErrorSchema,
-    },
+    response={200: SuccessSchema, 400: ErrorSchema},
 )
-def create_subscription(request, payload: CreateSubscriptionSchema):
+def create_subscription_api(request, payload: CreateSubscriptionSchema):
     try:
         with transaction.atomic():
+
             user = User.objects.filter(email=request.user.email).first()
-            if user.customer_number is None:
-                customer_data = create_customer(
-                    request.user.email,
-                    user.name
-                )
 
-                if not customer_data:
-                    return 400, {
-                        "status": "ERROR",
-                        "message": "Could not create customer.",
-                    }
+            if user.customer_id is None:
+                customer = create_customer(user.email, user.first_name)
 
-                customer_subscription = create_subscription(
-                    customer_data.id,
-                    payload.price_id
-                )
+                if not customer:
+                    return 400, {"status": "ERROR", "message": "Could not create customer"}
 
-                if not customer_subscription:
-                    return 400, {
-                        "status": "ERROR",
-                        "message": "Could not create customer.",
-                    }
+                user.customer_id = customer["id"]
+                user.save()
 
-                return 200, {
-                    "status": "SUCCESS",
-                    "message": "Customer created successfully.",
-                    # "data": customer_subscription,
-                }
+            subscription = create_subscription(
+                user.customer_id,
+                payload.price_id
+            )
+
+            if not subscription:
+                return 400, {"status": "ERROR", "message": "Could not create subscription"}
+
+            user.stripe_subscription_id = subscription["subscription_id"]
+            user.subscription_id = payload.subscription_type_id
+            user.is_subscribed = True
+            user.save()
+
+            return 200, {
+                "status": "SUCCESS",
+                "message": "Subscription created successfully",
+                "data": subscription,
+            }
 
     except Exception as e:
-        return 400, {
-            "status": "ERROR",
-            "message": str(e),
-        }
+        return 400, {"status": "ERROR", "message": str(e)}

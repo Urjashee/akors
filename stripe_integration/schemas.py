@@ -18,6 +18,5 @@ class CreateCustomerSchema(BaseModel):
     name: str
 
 class CreateSubscriptionSchema(BaseModel):
-    customer_id: str
     price_id: str
-    subscription_type: int
+    subscription_type_id: int
