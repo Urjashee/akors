@@ -24,6 +24,7 @@ class Role(models.Model):
 class Subscriptions(models.Model):
     name = models.CharField(max_length=100, unique=True)
     amount = models.IntegerField()
+    units = models.IntegerField(null=False)
     external_id = models.CharField(max_length=100, null=True, blank=True)
 
     class Meta:
@@ -80,8 +81,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     email_verified_at = models.DateTimeField(null=True)
     is_active = models.BooleanField(default=False)
     is_approved = models.BooleanField(default=False)
-    is_staff = models.BooleanField(default=False)  # ✅ ADD THIS
-    is_admin = models.BooleanField(default=False)  # ✅ ADD THIS
+    is_staff = models.BooleanField(default=False)
+    is_admin = models.BooleanField(default=False)
     is_subscribed = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -90,6 +91,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     role = models.ForeignKey(Role, on_delete=models.PROTECT, related_name="users")
     title = models.ForeignKey(Title, on_delete=models.PROTECT, related_name="users", null=True, blank=True)
     subscription = models.ForeignKey(Subscriptions, on_delete=models.PROTECT, related_name="users", null=True, blank=True)
+    property = models.ForeignKey("self", on_delete=models.PROTECT, related_name="users", null=True, blank=True)
 
     objects = UserManager()  # ✅ THIS FIXES THE ERROR
 

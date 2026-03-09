@@ -1,15 +1,16 @@
+from ninja.errors import HttpError
 from ninja.security import HttpBearer
 from accounts.auth import get_user_from_token
 
 class SuperAdminAuth(HttpBearer):
     def authenticate(self, request, token):
         user = get_user_from_token(token)
-        # print(user.role.name)
+        print(user.role.name)
         if not user:
-            return None
+            raise HttpError(401, "Not a valid user!")
 
         if user.role.name != "Super admin":
-            return None
+            raise HttpError(403, "Not an admin user!")
 
         request.user = user
         return user
@@ -19,10 +20,11 @@ class PropertyManagerAuth(HttpBearer):
         user = get_user_from_token(token)
 
         if not user:
-            return None
+            if not user:
+                raise HttpError(401, "Not a valid user!")
 
-        if user.role.name != "Property manager":
-            return None
+            if user.role.name != "Super admin":
+                raise HttpError(403, "Not a propert manager user!")
 
         request.user = user
         return user

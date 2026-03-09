@@ -1,4 +1,6 @@
 from ninja import NinjaAPI
+from ninja.errors import HttpError
+
 from accounts.api import router as accounts_router
 from stripe_integration.api import router as stripe_router
 from ninja.security import HttpBearer
@@ -22,3 +24,21 @@ api = NinjaAPI(
 
 api.add_router("/accounts/", accounts_router)
 api.add_router("/stripe/", stripe_router)
+
+@api.exception_handler(HttpError)
+def http_error_handler(request, exc):
+    status = "ERROR"
+    if exc.status_code == 403:
+        status = "FORBIDDEN"
+
+    if exc.status_code == 401:
+        status = "UNAUTHORIZED"
+
+    return api.create_response(
+        request,
+        {
+            "status": status,
+            "message": str(exc.message),
+        },
+        status=exc.status_code,
+    )

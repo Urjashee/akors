@@ -24,7 +24,6 @@
 
         .content {
             margin-top: 20px;
-            margin-bottom: 100px;
             font-family: "Google Sans", sans-serif;
         }
 
@@ -34,6 +33,7 @@
             color: grey;
             font-family: "Google Sans", sans-serif;
         }
+
         .footer-head {
             font-weight: bold;
             font-size: 16px;
@@ -54,9 +54,15 @@
         <img src="https://akors-frontend.s3.us-east-1.amazonaws.com/akors_logo.png" alt="logo" width="auto" height="100">
     </div>
     <div class="content">
-        <p style="font-weight: bold; font-size: 16px">Thank You for signing up on AKORS!</p>
-        <p>Your request has been sent to the admin. Please wait for admin’s approval.</p>
+        <p>Dear {{ user.first_name }},</p>
 
+        <p>Please click the button below to set up your account</p>
+        <button type="button" class="button">
+            <a href="{{ site }}/setup-account?token={{ token }}&user_id={{ user.id }}&type={{ type }}"
+               style="text-decoration:none;color:#2954FF;">
+                Setup account
+            </a>
+        </button>
     </div>
     <div class="footer">
         <p class="footer-head">Team AKORS</p>

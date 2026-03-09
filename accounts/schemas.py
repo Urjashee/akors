@@ -52,3 +52,14 @@ class CreatePasswordSchema(BaseModel):
     token: str
     password: str
     type: int
+
+class InvitedUsers(BaseModel):
+    first_name: str
+    last_name: str
+    email: str
+    title: int
+
+class SetupAccount(BaseModel):
+    token: str
+    qei_number: str
+    password: str

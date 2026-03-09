@@ -1,6 +1,7 @@
 from jose import jwt, JWTError, ExpiredSignatureError
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from ninja.errors import HttpError
 
 User = get_user_model()
 
@@ -21,9 +22,7 @@ def get_user_from_token(token: str):
         return User.objects.filter(id=int(user_id)).first()
 
     except ExpiredSignatureError:
-        print("Token expired")
-        return None
+        raise HttpError(401, "Token expired!")
 
     except JWTError:
-        print("Invalid token")
-        return None
+        raise HttpError(401, "Invalid token!")

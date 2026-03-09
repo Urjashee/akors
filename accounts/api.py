@@ -11,10 +11,11 @@ from ninja import Query
 from .auth_roles_middleware import SuperAdminAuth, PropertyManagerAuth
 from .jwt import create_access_token, create_refresh_token
 from .schemas import SuccessSchema, ErrorSchema, RegisterSchema, VerifyEmailSchema, EmailSchema, LoginSchema, \
-    UserFilterSchema, CreatePasswordSchema
+    UserFilterSchema, CreatePasswordSchema, InvitedUsers, SetupAccount
 from .models import User, PasswordResets, Role, Title
-from .services import send_welcome_email, send_reset_email, operator_sign_up_email, create_password_email
-from .constants import WELCOME_EMAIL, FORGOT_PASSWORD_EMAIL, OPERATOR_SIGN_UP_EMAIL, CREATE_PASSWORD_EMAIL
+from .services import send_welcome_email, send_reset_email, operator_sign_up_email, create_password_email, \
+    invite_user_email, process_password_setup
+from .constants import WELCOME_EMAIL, FORGOT_PASSWORD_EMAIL, OPERATOR_SIGN_UP_EMAIL, CREATE_PASSWORD_EMAIL, INVITE_EMAIL
 
 router = Router(tags=["accounts"])
 
@@ -22,10 +23,7 @@ router = Router(tags=["accounts"])
 @router.post(
     "/operator/register",
     auth=None,
-    response={
-        200: SuccessSchema,
-        400: ErrorSchema,
-    },
+    response={ 200: SuccessSchema, 400: ErrorSchema },
 )
 def operator_register(request, payload: RegisterSchema):
     token = secrets.token_urlsafe(32)
@@ -121,7 +119,6 @@ def operator_register(request, payload: RegisterSchema):
             "message": "Invalid title.",
         }
 
-
     except Exception as e:
         import traceback
         traceback.print_exc()  # prints full stacktrace in console/logs
@@ -145,10 +142,7 @@ def operator_register(request, payload: RegisterSchema):
 @router.post(
     "/property_manager/register",
     auth=None,
-    response={
-        200: SuccessSchema,
-        400: ErrorSchema,
-    },
+    response={ 200: SuccessSchema, 400: ErrorSchema },
 )
 def property_manager_register(request, payload: RegisterSchema):
     token = secrets.token_urlsafe(32)
@@ -243,10 +237,7 @@ def property_manager_register(request, payload: RegisterSchema):
 @router.post(
     "/verify",
     auth=None,
-    response={
-        200: SuccessSchema,
-        400: ErrorSchema,
-    },
+    response={ 200: SuccessSchema, 400: ErrorSchema },
 )
 def verify_email(request, payload: VerifyEmailSchema):
     try:
@@ -291,10 +282,7 @@ def verify_email(request, payload: VerifyEmailSchema):
 @router.post(
     "/forgot-password",
     auth=None,
-    response={
-        200: SuccessSchema,
-        400: ErrorSchema,
-    },
+    response={ 200: SuccessSchema, 400: ErrorSchema },
 )
 def forgot_password_request(request, payload: EmailSchema):
     token = secrets.token_urlsafe(32)
@@ -361,10 +349,7 @@ def forgot_password_request(request, payload: EmailSchema):
 @router.post(
     "/reset-password",
     auth=None,
-    response={
-        200: SuccessSchema,
-        400: ErrorSchema,
-    },
+    response={ 200: SuccessSchema, 400: ErrorSchema },
 )
 def reset_password_request(request, payload: VerifyEmailSchema):
     try:
@@ -413,10 +398,7 @@ def reset_password_request(request, payload: VerifyEmailSchema):
 @router.post(
     "/login",
     auth=None,
-    response={
-        200: SuccessSchema,
-        400: ErrorSchema,
-    },
+    response={ 200: SuccessSchema, 400: ErrorSchema },
 )
 def login(request, payload: LoginSchema):
     try:
@@ -461,56 +443,26 @@ def login(request, payload: LoginSchema):
 @router.post(
     "/create-password",
     auth=None,
-    response={
-        200: SuccessSchema,
-        400: ErrorSchema,
-    },
+    response={200: SuccessSchema, 400: ErrorSchema},
 )
 def create_password(request, payload: CreatePasswordSchema):
     try:
         with transaction.atomic():
-            reset = (
-                PasswordResets.objects
-                .filter(token=payload.token, active=True)
-                .select_related("user")
-                .order_by("-id")
-                .first()
+            user, error = process_password_setup(
+                payload.token,
+                payload.password
             )
 
-            if not reset:
-                return 400, {
-                    "status": "ERROR",
-                    "message": "Invalid or expired token.",
-                }
-
-            # deactivate token
-            reset.active = False
-            reset.save(update_fields=["active"])
-
-            # verify user
-            user = reset.user
-            user.set_password(payload.password)
-            user.is_active = True
-            user.is_approved = True
-            user.email_verified_at = timezone.now()
-
-            user.save(update_fields=[
-                "password",
-                "email_verified_at",
-                "is_active",
-                "is_approved",
-            ])
+            if error:
+                return 400, {"status": "ERROR", "message": error}
 
             return 200, {
                 "status": "SUCCESS",
                 "message": "Successfully approved property manager.",
             }
 
-    except Exception:
-        return 400, {
-            "status": "ERROR",
-            "message": "Could not fetch users.",
-        }
+    except Exception as e:
+        return 400, {"status": "ERROR", "message": str(e)}
 
 
 #  *************************** ADMIN **************************************
@@ -518,11 +470,7 @@ def create_password(request, payload: CreatePasswordSchema):
 @router.get(
     "/admin/users",
     auth=SuperAdminAuth(),
-    response={
-        200: SuccessSchema,
-        400: ErrorSchema,
-        403: ErrorSchema,
-    },
+    response={ 200: SuccessSchema, 400: ErrorSchema, 403: ErrorSchema },
 )
 def admin_user_list(request, filters: UserFilterSchema = Query(...)):
     try:
@@ -581,11 +529,7 @@ def admin_user_list(request, filters: UserFilterSchema = Query(...)):
 @router.post(
     "/admin/user-approve/{user_id}",
     auth=SuperAdminAuth(),
-    response={
-        200: SuccessSchema,
-        400: ErrorSchema,
-        403: ErrorSchema,
-    },
+    response={ 200: SuccessSchema, 400: ErrorSchema, 403: ErrorSchema },
 )
 def approve_user(request, user_id: int):
     if request.user.role.name != "Super admin":
@@ -639,11 +583,7 @@ def approve_user(request, user_id: int):
 @router.post(
     "/admin/user-toggle/{user_id}",
     auth=SuperAdminAuth(),
-    response={
-        200: SuccessSchema,
-        400: ErrorSchema,
-        403: ErrorSchema,
-    },
+    response={ 200: SuccessSchema, 400: ErrorSchema, 403: ErrorSchema },
 )
 def approve_user(request, user_id: int):
     if request.user.role.name != "Super admin":
@@ -681,26 +621,137 @@ def approve_user(request, user_id: int):
 
 #  *************************** PROPERTY MANAGER **************************************
 
+
 @router.get(
-    "/propert-manger/profile",
+    "/property-manager/profile",
     auth=PropertyManagerAuth(),
-    response={
-        200: SuccessSchema,
-        400: ErrorSchema,
-        403: ErrorSchema,
-    },
+    response={ 200: SuccessSchema, 400: ErrorSchema, 403: ErrorSchema },
 )
-def propert_manager_get_profile(request):
-    if request.user.role.name != "Property manager":
-        return 403, {
-            "status": "Unauthorized",
-            "message": "Permission denied. Property manager only.",
-        }
+def property_manager_get_profile(request):
     try:
         users = User.objects.filter(email=request.user.email).first()
+
+        return 200, {
+            "status": "SUCCESS",
+            "message": "Users fetched successfully.",
+            "data": {
+                "id": users.id,
+                "email": users.email,
+                "first_name": users.first_name,
+                "last_name": users.last_name,
+                "phone_number": users.phone_number,
+                "company_name": users.company_name,
+                "company_address": users.company_address,
+                "role": {
+                    "id": users.role_id,
+                    "name": users.role.name,
+                },
+                "subscription": {
+                    "id": users.subscription_id,
+                    "name": users.subscription.name,
+                    "amount": users.subscription.amount,
+                }
+
+            }
+        }
 
     except Exception:
         return 400, {
             "status": "ERROR",
             "message": "Could not fetch users.",
         }
+
+
+@router.post(
+    "/property-manager/invite-users",
+    auth=PropertyManagerAuth(),
+    response={ 200: SuccessSchema, 400: ErrorSchema, 403: ErrorSchema },
+)
+def property_manager_invite_user(request, payload: InvitedUsers):
+    token = secrets.token_urlsafe(32)
+    role = Role.objects.get(id=3)
+    title_data = Title.objects.get(id=payload.title)
+    try:
+        with transaction.atomic():
+            existing_user = User.objects.filter(email=payload.email).first()
+            if existing_user:
+                return 400, {
+                    "status": "ERROR",
+                    "message": "User with this email already exists.",
+                }
+
+            user = User.objects.create(
+                email=payload.email,
+                first_name=payload.first_name,
+                last_name=payload.last_name,
+                title=title_data,
+                role=role,
+                property=request.user,
+            )
+            if not user:
+                return 400, {
+                    "status": "ERROR",
+                    "message": "Could not invite user!",
+                }
+
+            password_resets = PasswordResets.objects.create(
+                email=user.email,
+                token=token,
+                type=INVITE_EMAIL,
+                user=user
+            )
+
+            if not password_resets:
+                return 400, {
+                    "status": "ERROR",
+                    "message": "Could not create password reset token. Please try again later.",
+                }
+            email_sent = invite_user_email(user, token, type=INVITE_EMAIL)
+            if not email_sent == 1:
+                return 400, {
+                    "status": "ERROR",
+                    "message": "Could not send email. Please try again later.",
+                }
+
+    except Role.DoesNotExist:
+        return 400, {
+            "status": "ERROR",
+            "message": "Invalid role.",
+        }
+
+    except Exception as e:
+        return 400, {
+            "status": "ERROR",
+            "message": str(e),
+        }
+
+    return 200, {
+        "status": "SUCCESS",
+        "message": "Successfully invited operator account.",
+    }
+
+
+@router.post(
+    "/setup",
+    auth=None,
+    response={200: SuccessSchema, 400: ErrorSchema},
+)
+def property_manager_setup_account(request, payload: SetupAccount):
+    try:
+        with transaction.atomic():
+            user, error = process_password_setup(
+                payload.token,
+                payload.password,
+                payload.qei_number
+            )
+
+            if error:
+                return 400, {"status": "ERROR", "message": error}
+
+            return 200, {
+                "status": "SUCCESS",
+                "message": "Operator account setup successfully.",
+            }
+
+    except Exception as e:
+        return 400, {"status": "ERROR", "message": str(e)}
