@@ -56,3 +56,74 @@ def cancel_subscription(subscription_id):
     except stripe.StripeError as e:
         print("Stripe Error:", str(e))
         return None
+
+def get_subscription_details(subscription_id):
+    try:
+        subscription = stripe.Subscription.retrieve(
+            subscription_id,
+            expand=["latest_invoice", "latest_invoice.payment_intent"]
+        )
+
+        return subscription
+
+    except stripe.StripeError as e:
+        print("Stripe Error:", str(e))
+        return None
+
+def get_upcoming_invoice(customer_id, subscription_id):
+    try:
+        upcoming_invoice = stripe.Invoice.upcoming(
+            customer=customer_id,
+            subscription=subscription_id
+        )
+
+        return upcoming_invoice
+
+    except stripe.StripeError:
+        return None
+
+def get_all_invoice(customer_id):
+    try:
+        invoices = stripe.Invoice.list(
+            customer=customer_id,
+        )
+
+        return invoices
+
+    except stripe.StripeError:
+        return None
+
+def get_payment_method(payment_method_id):
+    try:
+        payment_method = stripe.PaymentMethod.retrieve(payment_method_id)
+
+        return payment_method
+
+    except stripe.StripeError:
+        return None
+
+
+def update_default_card(customer_id, subscription_id, payment_method_id):
+    try:
+        stripe.PaymentMethod.attach(
+            payment_method_id,
+            customer=customer_id
+        )
+
+        stripe.Customer.modify(
+            customer_id,
+            invoice_settings={
+                "default_payment_method": payment_method_id
+            }
+        )
+
+        stripe.Subscription.modify(
+            subscription_id,
+            default_payment_method=payment_method_id
+        )
+
+        return True
+
+    except stripe.error.StripeError as e:
+        print(str(e))
+        return False

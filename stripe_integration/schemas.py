@@ -25,3 +25,6 @@ class UpdateSubscriptionSchema(BaseModel):
     stripe_subscription_id: str
     subscription_type_id: str
     user_id: int
+
+class UpdatePaymentMethod(BaseModel):
+    payment_method_id: str

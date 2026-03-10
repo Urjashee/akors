@@ -403,7 +403,7 @@ def reset_password_request(request, payload: VerifyEmailSchema):
 def login(request, payload: LoginSchema):
     try:
         with transaction.atomic():
-            print(payload)
+
             user = User.objects.filter(email=payload.email, is_active=True).first()
             if not user:
                 return 400, {

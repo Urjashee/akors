@@ -4,7 +4,7 @@ from django.conf import settings
 
 def create_access_token(user: any):
     payload = {
-        "id": str(user.id),
+        "id": user.id,
         "email": str(user.email),
         "first_name": str(user.first_name),
         "last_name": str(user.last_name),
@@ -22,13 +22,14 @@ def create_access_token(user: any):
         "exp": datetime.utcnow() + timedelta(
             minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES
         ),
+        "invited_by": user.property_id if user.property_id else None,
     }
     return jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
 
 
 def create_refresh_token(user: any):
     payload = {
-        "id": str(user.id),
+        "id": user.id,
         "email": str(user.email),
         "first_name": str(user.first_name),
         "last_name": str(user.last_name),
@@ -46,5 +47,6 @@ def create_refresh_token(user: any):
         "exp": datetime.utcnow() + timedelta(
             days=settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS
         ),
+        "invited_by": user.property_id if user.property_id else None,
     }
     return jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)

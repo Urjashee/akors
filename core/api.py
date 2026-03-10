@@ -3,6 +3,7 @@ from ninja.errors import HttpError
 
 from accounts.api import router as accounts_router
 from stripe_integration.api import router as stripe_router
+from property.api import router as property_router
 from ninja.security import HttpBearer
 from accounts.auth import get_user_from_token
 
@@ -24,6 +25,7 @@ api = NinjaAPI(
 
 api.add_router("/accounts/", accounts_router)
 api.add_router("/stripe/", stripe_router)
+api.add_router("/property/", property_router)
 
 @api.exception_handler(HttpError)
 def http_error_handler(request, exc):
