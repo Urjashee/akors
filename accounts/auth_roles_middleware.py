@@ -18,7 +18,7 @@ class SuperAdminAuth(HttpBearer):
 class PropertyManagerAuth(HttpBearer):
     def authenticate(self, request, token):
         user = get_user_from_token(token)
-
+        print(user.role.name)
         if not user:
             if not user:
                 raise HttpError(401, "Not a valid user!")

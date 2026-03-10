@@ -20,3 +20,8 @@ class CreateCustomerSchema(BaseModel):
 class CreateSubscriptionSchema(BaseModel):
     price_id: str
     subscription_type_id: int
+
+class UpdateSubscriptionSchema(BaseModel):
+    stripe_subscription_id: str
+    subscription_type_id: str
+    user_id: int

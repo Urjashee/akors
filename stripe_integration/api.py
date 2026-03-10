@@ -1,28 +1,20 @@
-import secrets
-from datetime import timedelta
-
-from django.utils import timezone
 from ninja import Router
 from django.db import transaction
-from django.db.models import F
-
-from ninja import Query
 
 from accounts.models import User
-from stripe_integration.schemas import CreateCustomerSchema, ErrorSchema, SuccessSchema, CreateSubscriptionSchema
-from stripe_integration.services import create_customer, create_subscription
+from accounts.auth_roles_middleware import PropertyManagerAuth, SuperAdminAuth
+from stripe_integration.schemas import CreateCustomerSchema, ErrorSchema, SuccessSchema, CreateSubscriptionSchema, \
+    UpdateSubscriptionSchema
+from stripe_integration.services import create_customer, create_subscription, cancel_subscription
 
 router = Router(tags=["stripe"])
 
 
-# STEP 4 — Create Customer (Backend)
+# Create Customer (Backend)
 @router.post(
     "/customers/create",
     auth=None,
-    response={
-        200: SuccessSchema,
-        400: ErrorSchema,
-    },
+    response={200: SuccessSchema, 400: ErrorSchema},
 )
 def create_customer_view(request, payload: CreateCustomerSchema):
     try:
@@ -52,22 +44,15 @@ def create_customer_view(request, payload: CreateCustomerSchema):
         }
 
 
-# STEP 5.1 — First-Time Payment Method Setup (IMPORTANT)
-
-# STEP 5.2 — Attach Payment method
-
-# STEP 6 — Set Default Payment Method (Backend)
-
-# STEP 7 — Create Subscription (Fully Backend Controlled)
+# Create Subscription (Fully Backend Controlled)
 @router.post(
     "/subscription/create",
-    # auth=None,
     response={200: SuccessSchema, 400: ErrorSchema},
 )
 def create_subscription_api(request, payload: CreateSubscriptionSchema):
     try:
         with transaction.atomic():
-
+            print(request.user.email)
             user = User.objects.filter(email=request.user.email).first()
 
             if user.customer_id is None:
@@ -87,15 +72,78 @@ def create_subscription_api(request, payload: CreateSubscriptionSchema):
             if not subscription:
                 return 400, {"status": "ERROR", "message": "Could not create subscription"}
 
-            user.stripe_subscription_id = subscription["subscription_id"]
+            # user.stripe_subscription_id = subscription["subscription_id"]
+            # user.subscription_id = payload.subscription_type_id
+            # user.is_subscribed = True
+            # user.save()
+
+            return 200, {
+                "status": "SUCCESS",
+                "message": "Subscription created successfully",
+                "data": {
+                    "stripe_subscription_id": subscription["subscription_id"],
+                    "client_secret": subscription["client_secret"],
+                    "subscription_id": payload.subscription_type_id,
+                    "user_id": user.id,
+                }
+            }
+
+    except Exception as e:
+        return 400, {"status": "ERROR", "message": str(e)}
+
+
+# Update subscription details from url
+@router.post(
+    "/subscription/update",
+    auth=None,
+    response={200: SuccessSchema, 400: ErrorSchema},
+)
+def update_subscription(request, payload: UpdateSubscriptionSchema):
+    try:
+        with transaction.atomic():
+            user = User.objects.filter(id=request.payload.user_id).first()
+
+            if user.stripe_subscription_id:
+                delete_subscription = cancel_subscription(user.stripe_subscription_id)
+                if not delete_subscription:
+                    return 400, {"status": "ERROR", "message": "Could not delete previous subscription"}
+
+            user.stripe_subscription_id = payload.stripe_subscription_id
             user.subscription_id = payload.subscription_type_id
             user.is_subscribed = True
             user.save()
 
             return 200, {
                 "status": "SUCCESS",
-                "message": "Subscription created successfully",
-                "data": subscription,
+                "message": "Subscription updated successfully",
+            }
+
+    except Exception as e:
+        return 400, {"status": "ERROR", "message": str(e)}
+
+
+# Update subscription details from url
+@router.post(
+    "/subscription/cancel",
+    response={200: SuccessSchema, 400: ErrorSchema},
+)
+def cancel_subscription(request):
+    try:
+        with transaction.atomic():
+            user = User.objects.filter(email=request.user.email).first()
+
+            if user.stripe_subscription_id:
+                delete_subscription = cancel_subscription(user.stripe_subscription_id)
+                if not delete_subscription:
+                    return 400, {"status": "ERROR", "message": "Could not delete subscription"}
+
+            user.stripe_subscription_id = None
+            user.is_subscribed = False
+            user.save()
+
+            return 200, {
+                "status": "SUCCESS",
+                "message": "Subscription deleted successfully",
             }
 
     except Exception as e:

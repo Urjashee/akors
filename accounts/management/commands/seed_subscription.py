@@ -15,25 +15,25 @@ class Command(BaseCommand):
             {
                 "name": "Operator Plan",
                 "amount": 5,
-                "external_id": None,
+                "external_id": "price_1T504UBDnPGPFOY8VTUSq0Wc",
                 "units": 10000000
             },
             {
                 "name": "Basic Plan",
                 "amount": 49,
-                "external_id": "price_basic_001",
+                "external_id": "price_1T4zyCBDnPGPFOY8gl9kKiXX",
                 "units": 10
             },
             {
                 "name": "Premium Plan",
                 "amount": 100,
-                "external_id": "price_pro_001",
+                "external_id": "price_1T501NBDnPGPFOY8rZQD6HoW",
                 "units": 25
             },
             {
                 "name": "Ultimate Plan",
                 "amount": 150,
-                "external_id": "price_ultimate_001",
+                "external_id": "price_1T5031BDnPGPFOY86b37xTf5",
                 "units": 10000000
             },
         ]
