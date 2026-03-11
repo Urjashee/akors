@@ -2,6 +2,7 @@ from ninja import NinjaAPI
 from ninja.errors import HttpError
 
 from accounts.api import router as accounts_router
+from forms.api import router as forms_router
 from accounts.config import router as config_router
 from stripe_integration.api import router as stripe_router
 from property.api import router as property_router
@@ -28,6 +29,7 @@ api.add_router("/accounts/", accounts_router)
 api.add_router("/config/", config_router)
 api.add_router("/stripe/", stripe_router)
 api.add_router("/property/", property_router)
+api.add_router("/forms/", forms_router)
 
 @api.exception_handler(HttpError)
 def http_error_handler(request, exc):

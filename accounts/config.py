@@ -17,7 +17,7 @@ def get_config_details(request):
         with transaction.atomic():
             roles = Role.objects.values("id", "name")
             titles = Title.objects.values("id", "name")
-            states = State.objects.values("id", "name")
+            states = State.objects.values("id", "name", "is_active")
             unit_classes = UnitClass.objects.values("id", "name")
             unit_types = UnitType.objects.values("id", "name")
             subscriptions = Subscriptions.objects.values("id", "name", "amount", "external_id", "units")

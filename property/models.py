@@ -3,6 +3,7 @@ from accounts.models import User
 
 class State(models.Model):
     name = models.CharField(max_length=100, unique=True)
+    is_active = models.BooleanField(default=False)
 
     class Meta:
         db_table = "states"
@@ -61,21 +62,6 @@ class Unit(models.Model):
     class Meta:
         db_table = "units"
 
-class Forms(models.Model):
-    name = models.CharField(max_length=500)
-    url = models.CharField(max_length=500)
-
-    # expiration_date = models.DateField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    state = models.ForeignKey(State, on_delete=models.PROTECT, null=True)
-    # user = models.ForeignKey(User, on_delete=models.PROTECT)
-    # unit = models.ForeignKey(Unit, on_delete=models.CASCADE)
-    # property = models.ForeignKey(PropertyManagement, on_delete=models.CASCADE)
-
-    class Meta:
-        db_table = "forms"
 
 class Images(models.Model):
     url = models.CharField(max_length=500)
