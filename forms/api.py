@@ -35,26 +35,26 @@ def update_states(request, payload: UpdateStates):
         "message": "Successfully updated states.",
     }
 
-@router.post(
-    "/add-update",
-    auth=SuperAdminAuth(),
-    response={ 200: SuccessSchema, 400: ErrorSchema, 403: ErrorSchema },
-)
-def add_update_form(request, payload: AddEditForms, image: UploadedFile = File(...)):
-    try:
-        with transaction.atomic():
-            pass
-
-    except Exception as e:
-        return 400, {
-            "status": "ERROR",
-            "message": str(e),
-        }
-
-    return 200, {
-        "status": "SUCCESS",
-        "message": "Successfully updated states.",
-    }
+# @router.post(
+#     "/add-update",
+#     auth=SuperAdminAuth(),
+#     response={ 200: SuccessSchema, 400: ErrorSchema, 403: ErrorSchema },
+# )
+# def add_update_form(request, payload: AddEditForms, image: UploadedFile = File(...)):
+#     try:
+#         with transaction.atomic():
+#             pass
+#
+#     except Exception as e:
+#         return 400, {
+#             "status": "ERROR",
+#             "message": str(e),
+#         }
+#
+#     return 200, {
+#         "status": "SUCCESS",
+#         "message": "Successfully updated states.",
+#     }
 
 
 #  *************************** PROPERT MANAGER **************************************
