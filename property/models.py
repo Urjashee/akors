@@ -30,7 +30,7 @@ class UnitClass(models.Model):
         return self.name
 
 class PropertyManagement(models.Model):
-    building_name = models.CharField(max_length=500)
+    name = models.CharField(max_length=500)
     state_registration = models.CharField(max_length=10)
     property_management_company = models.CharField(max_length=500)
     address_line_1 = models.CharField(max_length=500)

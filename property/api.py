@@ -3,7 +3,7 @@ from django.db import transaction
 
 from accounts.auth_roles_middleware import OperatorAuth, SuperAdminAuth
 from accounts.schemas import SuccessSchema, ErrorSchema
-from property.models import State
+from property.models import State, PropertyManagement
 from property.schemas import AddProperty
 
 router = Router(tags=["property"])
@@ -19,15 +19,28 @@ router = Router(tags=["property"])
 #  *************************** OPERATOR **************************************
 
 @router.post(
-    "/operator/invite-users",
+    "/operator/add-edit",
     auth=OperatorAuth(),
     response={ 200: SuccessSchema, 400: ErrorSchema, 403: ErrorSchema },
 )
-def property_manager_invite_user(request, payload: AddProperty):
+def add_edit_property(request, payload: AddProperty):
 
     try:
         with transaction.atomic():
-            pass
+            if payload.id:
+                property = PropertyManagement.objects.get(id=payload.id)
+
+
+            else:
+                property = PropertyManagement.objects.create(
+                    name=payload.name,
+                    state_id=payload.state_id,
+                )
+                if not property:
+                    return 400, {
+                        "status": "ERROR",
+                        "message": "Form could not be created.",
+                    }
 
     except Exception as e:
         return 400, {
@@ -37,5 +50,5 @@ def property_manager_invite_user(request, payload: AddProperty):
 
     return 200, {
         "status": "SUCCESS",
-        "message": "Successfully invited operator account.",
+        "message": "Successfully added/updated building.",
     }

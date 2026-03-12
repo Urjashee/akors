@@ -2,6 +2,12 @@ from typing import Optional, Any, List
 from pydantic import BaseModel, EmailStr, Field
 
 class AddProperty(BaseModel):
-    token: str
-    qei_number: str
-    password: str
+    id: Optional[str] = None
+    name: str
+    state_registration: str
+    property_management_company: str
+    address_line_1: str
+    address_line_2: str
+    city: str
+    zipcode: str
+    state: int
