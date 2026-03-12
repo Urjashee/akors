@@ -10,4 +10,8 @@ class AddProperty(BaseModel):
     address_line_2: str
     city: str
     zipcode: str
-    state: int
+    state_id: int
+
+class AssignManager(BaseModel):
+    property_id: int
+    manager_id: int

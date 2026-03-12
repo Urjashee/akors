@@ -40,8 +40,9 @@ class PropertyManagement(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    manager = models.ForeignKey(User, on_delete=models.CASCADE)
+    manager = models.ForeignKey(User, on_delete=models.CASCADE, related_name="managed_properties", null=True)
     state = models.ForeignKey(State, on_delete=models.CASCADE, null=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, null=True, related_name="created_properties")
 
     class Meta:
         db_table = "properties"

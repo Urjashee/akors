@@ -580,7 +580,7 @@ def approve_user(request, user_id: int):
         }
 
 
-@router.post(
+@router.patch(
     "/admin/user-toggle/{user_id}",
     auth=SuperAdminAuth(),
     response={ 200: SuccessSchema, 400: ErrorSchema, 403: ErrorSchema },

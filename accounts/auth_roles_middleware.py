@@ -38,7 +38,7 @@ class OperatorAuth(HttpBearer):
         if not user:
             raise HttpError(401, "Not a valid user!")
 
-        if user.role.name != "Super admin":
+        if user.role.name != "Operator":
             raise HttpError(403, "Not an admin user!")
 
         request.user = user
