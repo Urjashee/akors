@@ -6,7 +6,8 @@ from accounts.models import User
 from accounts.schemas import SuccessSchema, ErrorSchema
 from property.models import State, PropertyManagement
 from property.schemas import AddProperty, AssignManager
-from accounts.constants import PROPERTY_MANAGER
+from accounts.constants import PROPERTY_MANAGER, SUPER_ADMIN, OPERATOR
+from property.services import update_property_forms
 
 router = Router(tags=["property"])
 
@@ -58,8 +59,7 @@ def assign_manager(request, payload: AssignManager):
 #  *************************** OPERATOR **************************************
 
 @router.post(
-    "/operator/add-edit",
-    auth=OperatorAuth(),
+    "/add-edit",
     response={200: SuccessSchema, 400: ErrorSchema, 403: ErrorSchema},
 )
 def add_edit_property(request, payload: AddProperty):
@@ -69,16 +69,45 @@ def add_edit_property(request, payload: AddProperty):
             if payload.id:
                 property_management = PropertyManagement.objects.get(id=payload.id)
                 property_management.name = payload.name
-                property_management.state_registration = payload.state_registration
                 property_management.property_management_company = payload.property_management_company
                 property_management.address_line_1 = payload.address_line_1
                 property_management.address_line_2 = payload.address_line_2
                 property_management.city = payload.city
                 property_management.zipcode = payload.zipcode
                 property_management.state = state
+                if request.user.role.id is OPERATOR:
+                    property_management.state_registration = payload.state_registration
+                if request.user.role.id is SUPER_ADMIN:
+                    user = User.objects.get(id=payload.manager_id)
+                    if not user:
+                        return 400, {
+                            "status": "ERROR",
+                            "message": "User not found",
+                        }
+                    if user.role.id is not PROPERTY_MANAGER:
+                        return 400, {
+                            "status": "ERROR",
+                            "message": "Assigned user is not a property manager",
+                        }
+                    property_management.state_registration = payload.state_registration
+                    property_management.manager_id = payload.manager_id
                 property_management.save()
+                if request.user.role.id is PROPERTY_MANAGER:
+                    property_forms = update_property_forms(property_management, payload)
+                    if not property_forms:
+                        return 400, {
+                            "status": "ERROR",
+                            "message": "Property forms not updated",
+                        }
 
             else:
+                print(request.user.role)
+                if request.user.role.id is not OPERATOR:
+                    return 400, {
+                        "status": "ERROR",
+                        "message": "Can't add building details",
+                    }
+
                 property_management = PropertyManagement.objects.create(
                     name=payload.name,
                     state_registration=payload.state_registration,

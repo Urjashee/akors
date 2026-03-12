@@ -47,6 +47,22 @@ class PropertyManagement(models.Model):
     class Meta:
         db_table = "properties"
 
+class PropertyForms(models.Model):
+    property = models.ForeignKey(
+        "PropertyManagement",
+        on_delete=models.CASCADE,
+        related_name="forms"
+    )
+
+    form = models.ForeignKey(
+        "forms.Forms",
+        on_delete=models.CASCADE,
+        related_name="properties"
+    )
+
+    class Meta:
+        db_table = "property_forms"
+
 class Unit(models.Model):
     name = models.CharField(max_length=500)
     state_registration = models.CharField(max_length=10)
