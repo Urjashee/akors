@@ -11,5 +11,8 @@ class UpdateStates(BaseModel):
 
 class AddEditForms(BaseModel):
     id: Optional[int] = None
-    name: str
-    state_id: int
+    name: Optional[str]
+    state_id: Optional[int]
+
+class DeleteForm(BaseModel):
+    id: int

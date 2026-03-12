@@ -5,7 +5,7 @@ from property.models import State
 
 class Forms(models.Model):
     name = models.CharField(max_length=500)
-    url = models.CharField(max_length=500)
+    image = models.ImageField(upload_to="forms/", null=True, blank=True)
 
     # expiration_date = models.DateField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

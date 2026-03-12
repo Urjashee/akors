@@ -51,7 +51,7 @@ INSTALLED_APPS = [
     'property',
     'stripe_integration',
     'forms',
-    "storages"
+    'storages'
 ]
 
 MIDDLEWARE = [
@@ -164,16 +164,21 @@ AWS_S3_REGION_NAME = os.getenv("AWS_DEFAULT_REGION")
 
 AWS_S3_FILE_OVERWRITE = False
 AWS_DEFAULT_ACL = None
+AWS_QUERYSTRING_AUTH = False
 
 AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
 
-DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
 
-# from django.core.mail import send_mail
-#
-# send_mail(
-#     subject="SMTP Test",
-#     message="If you received this, SMTP works 🎉",
-#     from_email=None,
-#     recipient_list=["urja@simpalm.com"],
-# )
+# Django 4.2+ storage system
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+
+# Backward compatibility
+DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"

@@ -1,16 +1,14 @@
 from typing import Optional
-from django.core.files.storage import default_storage
-from django.core.files.base import ContentFile
-import boto3
-from botocore.exceptions import NoCredentialsError
 
-from ninja import Router
+from django.core.files.storage import default_storage
+from ninja import Router, Form
 from django.db import transaction
 from ninja import File
-from django.core.files.uploadedfile import UploadedFile
+from ninja.files import UploadedFile
 
 from accounts.auth_roles_middleware import OperatorAuth, SuperAdminAuth
 from accounts.schemas import SuccessSchema, ErrorSchema
+from core import settings
 from forms.models import Forms
 from property.models import State
 from forms.schemas import AddProperty, UpdateStates, AddEditForms, DeleteForm
@@ -48,7 +46,7 @@ def update_states(request, payload: UpdateStates):
     auth=SuperAdminAuth(),
     response={ 200: SuccessSchema, 400: ErrorSchema, 403: ErrorSchema },
 )
-def add_update_form(request, payload: AddEditForms, image: Optional[UploadedFile] = File(None)):
+def add_update_form(request, payload: AddEditForms = Form(...), image: UploadedFile = File(None)):
     try:
         with transaction.atomic():
             if payload.id:
@@ -67,8 +65,17 @@ def add_update_form(request, payload: AddEditForms, image: Optional[UploadedFile
                 form = Forms.objects.create(
                     name=payload.name,
                     state_id=payload.state_id,
-                    image=image if image else None
+                    image=image
                 )
+                if not form:
+                    return 400, {
+                        "status": "ERROR",
+                        "message": "Form could not be created.",
+                    }
+                # print("DEFAULT_FILE_STORAGE:", settings.DEFAULT_FILE_STORAGE)
+                # print("STORAGE INSTANCE:", default_storage)
+                # print("IMAGE:", image)
+                # print("STORAGE:", form.image.storage)
 
     except Exception as e:
         return 400, {
@@ -109,6 +116,37 @@ def delete_form(request, payload: DeleteForm):
         "status": "SUCCESS",
         "message": "Successfully deleted form.",
     }
+
+
+@router.get(
+    "/get",
+    auth=SuperAdminAuth(),
+    response={200: SuccessSchema, 400: ErrorSchema, 403: ErrorSchema},
+)
+def get_forms(request):
+    try:
+        forms = Forms.objects.all()
+
+        data = []
+        for form in forms:
+            data.append({
+                "id": form.id,
+                "name": form.name,
+                "state_id": form.state_id,
+                "image": request.build_absolute_uri(form.image.url) if form.image else None
+            })
+
+        return 200, {
+            "status": "SUCCESS",
+            "message": "Forms fetched successfully.",
+            "data": data,
+        }
+
+    except Exception as e:
+        return 400, {
+            "status": "ERROR",
+            "message": str(e),
+        }
 
 
 #  *************************** PROPERT MANAGER **************************************
