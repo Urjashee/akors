@@ -19,7 +19,7 @@ router = Router(tags=["property"])
 #  *************************** OPERATOR **************************************
 
 @router.post(
-    "/property-manager/invite-users",
+    "/operator/invite-users",
     auth=OperatorAuth(),
     response={ 200: SuccessSchema, 400: ErrorSchema, 403: ErrorSchema },
 )

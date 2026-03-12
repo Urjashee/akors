@@ -119,13 +119,13 @@ def delete_form(request, payload: DeleteForm):
 
 
 @router.get(
-    "/get",
+    "/get/{state_id}",
     auth=SuperAdminAuth(),
     response={200: SuccessSchema, 400: ErrorSchema, 403: ErrorSchema},
 )
-def get_forms(request):
+def get_forms(request, state_id: int):
     try:
-        forms = Forms.objects.all()
+        forms = Forms.objects.filter(state_id=state_id)
 
         data = []
         for form in forms:
