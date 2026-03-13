@@ -276,6 +276,7 @@ def verify_email(request, payload: VerifyEmailSchema):
     return 200, {
         "status": "SUCCESS",
         "message": "Email verified successfully",
+        "data": None
     }
 
 
@@ -343,6 +344,7 @@ def forgot_password_request(request, payload: EmailSchema):
     return 200, {
         "status": "SUCCESS",
         "message": "Password reset request sent successfully.",
+        "data": None
     }
 
 
@@ -392,6 +394,7 @@ def reset_password_request(request, payload: VerifyEmailSchema):
     return 200, {
         "status": "SUCCESS",
         "message": "Password reset successfully.",
+        "data": None
     }
 
 
@@ -459,6 +462,7 @@ def create_password(request, payload: CreatePasswordSchema):
             return 200, {
                 "status": "SUCCESS",
                 "message": "Successfully approved property manager.",
+                "data": None
             }
 
     except Exception as e:
@@ -571,6 +575,7 @@ def approve_user(request, user_id: int):
             return 200, {
                 "status": "SUCCESS",
                 "message": "Successfully approved property manager.",
+                "data": None
             }
 
     except Exception:
@@ -610,6 +615,7 @@ def approve_user(request, user_id: int):
             return 200, {
                 "status": "SUCCESS",
                 "message": "Successfully updated user status.",
+                "data": None
             }
 
     except Exception:
@@ -728,6 +734,7 @@ def property_manager_invite_user(request, payload: InvitedUsers):
     return 200, {
         "status": "SUCCESS",
         "message": "Successfully invited operator account.",
+        "data": None
     }
 
 
@@ -751,6 +758,7 @@ def property_manager_setup_account(request, payload: SetupAccount):
             return 200, {
                 "status": "SUCCESS",
                 "message": "Operator account setup successfully.",
+                "data": None
             }
 
     except Exception as e:

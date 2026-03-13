@@ -38,6 +38,7 @@ def update_states(request, payload: UpdateStates):
     return 200, {
         "status": "SUCCESS",
         "message": "Successfully updated states.",
+        "data": None
     }
 
 
@@ -47,6 +48,12 @@ def update_states(request, payload: UpdateStates):
     response={ 200: SuccessSchema, 400: ErrorSchema, 403: ErrorSchema },
 )
 def add_update_form(request, payload: AddEditForms = Form(...), image: UploadedFile = File(None)):
+    state = State.objects.get(id=payload.state_id)
+    if state.is_active is False:
+        return 400, {
+            "status": "ERROR",
+            "message": "State is not active.",
+        }
     try:
         with transaction.atomic():
             if payload.id:
@@ -86,6 +93,7 @@ def add_update_form(request, payload: AddEditForms = Form(...), image: UploadedF
     return 200, {
         "status": "SUCCESS",
         "message": "Successfully added/updated form.",
+        "data": None
     }
 
 
@@ -115,6 +123,7 @@ def delete_form(request, payload: DeleteForm):
     return 200, {
         "status": "SUCCESS",
         "message": "Successfully deleted form.",
+        "data": None
     }
 
 

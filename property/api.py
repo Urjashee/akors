@@ -76,7 +76,7 @@ def get_property(request):
 
     for building in buildings:
 
-        state_forms = Forms.objects.filter(state=building.state)
+        state_forms = Forms.objects.filter(state=building.state).select_related("state")
 
         active_forms = set(
             PropertyForms.objects

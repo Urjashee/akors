@@ -117,6 +117,7 @@ def update_subscription(request, payload: UpdateSubscriptionSchema):
             return 200, {
                 "status": "SUCCESS",
                 "message": "Subscription updated successfully",
+                "data": None
             }
 
     except Exception as e:
@@ -145,6 +146,7 @@ def cancel_subscription(request):
             return 200, {
                 "status": "SUCCESS",
                 "message": "Subscription deleted successfully",
+                "data": None
             }
 
     except Exception as e:
@@ -221,6 +223,7 @@ def subscription_details_api(request, payload: UpdatePaymentMethod):
             return 200, {
                 "status": "SUCCESS",
                 "message": "Payment method updated successfully",
+                "data": None
             }
 
     except Exception as e:
