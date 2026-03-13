@@ -1,10 +1,14 @@
-from typing import Optional, Any
+from typing import Optional, Any, Generic, TypeVar, Type
+
+from ninja import Schema
 from pydantic import BaseModel, EmailStr, Field
 
-class SuccessSchema(BaseModel):
+T = TypeVar("T")
+
+class SuccessSchema(Schema, Generic[T]):
     status: str
     message: str
-    data: Optional[Any] = None
+    data: T
 
     class Config:
         exclude_none = True

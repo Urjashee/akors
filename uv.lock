@@ -14,6 +14,7 @@ dependencies = [
     { name = "django-storages" },
     { name = "djangorestframework" },
     { name = "dotenv" },
+    { name = "faker" },
     { name = "gunicorn" },
     { name = "pillow" },
     { name = "psycopg" },
@@ -30,6 +31,7 @@ requires-dist = [
     { name = "django-storages", specifier = ">=1.14.6" },
     { name = "djangorestframework" },
     { name = "dotenv", specifier = ">=0.9.9" },
+    { name = "faker", specifier = ">=40.8.0" },
     { name = "gunicorn", specifier = ">=25.1.0" },
     { name = "pillow", specifier = ">=12.1.1" },
     { name = "psycopg", specifier = ">=3.3.2" },
@@ -234,6 +236,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/c0/1f/924e3caae75f471eae4b26bd13b698f6af2c44279f67af317439c2f4c46a/ecdsa-0.19.1.tar.gz", hash = "sha256:478cba7b62555866fcb3bb3fe985e06decbdb68ef55713c4e5ab98c57d508e61", size = 201793, upload-time = "2025-03-13T11:52:43.25Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/cb/a3/460c57f094a4a165c84a1341c373b0a4f5ec6ac244b998d5021aade89b77/ecdsa-0.19.1-py2.py3-none-any.whl", hash = "sha256:30638e27cf77b7e15c4c4cc1973720149e1033827cfd00661ca5c8cc0cdb24c3", size = 150607, upload-time = "2025-03-13T11:52:41.757Z" },
+]
+
+[[package]]
+name = "faker"
+version = "40.8.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "tzdata", marker = "sys_platform == 'win32'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/70/03/14428edc541467c460d363f6e94bee9acc271f3e62470630fc9a647d0cf2/faker-40.8.0.tar.gz", hash = "sha256:936a3c9be6c004433f20aa4d99095df5dec82b8c7ad07459756041f8c1728875", size = 1956493, upload-time = "2026-03-04T16:18:48.161Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/4c/3b/c6348f1e285e75b069085b18110a4e6325b763a5d35d5e204356fc7c20b3/faker-40.8.0-py3-none-any.whl", hash = "sha256:eb21bdba18f7a8375382eb94fb436fce07046893dc94cb20817d28deb0c3d579", size = 1989124, upload-time = "2026-03-04T16:18:46.45Z" },
 ]
 
 [[package]]

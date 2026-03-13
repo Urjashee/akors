@@ -5,7 +5,7 @@ from accounts.auth_roles_middleware import OperatorAuth, SuperAdminAuth
 from accounts.models import User
 from accounts.schemas import SuccessSchema, ErrorSchema
 from property.models import State, PropertyManagement
-from property.schemas import AddProperty, AssignManager
+from property.schemas import AddProperty, AssignManager, PropertySchema
 from accounts.constants import PROPERTY_MANAGER, SUPER_ADMIN, OPERATOR
 from property.services import update_property_forms
 
@@ -51,9 +51,71 @@ def assign_manager(request, payload: AssignManager):
     return 200, {
         "status": "SUCCESS",
         "message": "Successfully update property manager.",
+        "data": None
     }
 
+
 #  *************************** PROPERT MANAGER **************************************
+
+from forms.models import Forms
+from property.models import PropertyForms
+
+@router.get(
+    "/get",
+    response={200: SuccessSchema[list[PropertySchema]], 400: ErrorSchema},
+)
+def get_property(request):
+
+    buildings = (
+        PropertyManagement.objects
+        .select_related("state")
+        .filter(manager=request.user)
+    )
+
+    result = []
+
+    for building in buildings:
+
+        state_forms = Forms.objects.filter(state=building.state)
+
+        active_forms = set(
+            PropertyForms.objects
+            .filter(property=building)
+            .values_list("form_id", flat=True)
+        )
+        print(active_forms)
+
+        forms = []
+
+        for form in state_forms:
+            forms.append({
+                "id": form.id,
+                "name": form.name,
+                "image": form.image.url if form.image else None,
+                "active": 1 if form.id in active_forms else 0
+            })
+
+        result.append({
+            "id": building.id,
+            "name": building.name,
+            "address_line_1": building.address_line_1,
+            "address_line_2": building.address_line_2,
+            "city": building.city,
+            "zipcode": building.zipcode,
+            "property_management_company": building.property_management_company,
+            "state_registration": building.state_registration,
+            "state": {
+                "id": building.state.id,
+                "name": building.state.name
+            },
+            "forms": forms
+        })
+
+    return 200, {
+        "status": "SUCCESS",
+        "message": "Successfully fetched buildings.",
+        "data": result
+    }
 
 
 #  *************************** OPERATOR **************************************
@@ -93,12 +155,7 @@ def add_edit_property(request, payload: AddProperty):
                     property_management.manager_id = payload.manager_id
                 property_management.save()
                 if request.user.role.id is PROPERTY_MANAGER:
-                    property_forms = update_property_forms(property_management, payload)
-                    if not property_forms:
-                        return 400, {
-                            "status": "ERROR",
-                            "message": "Property forms not updated",
-                        }
+                    update_property_forms(property_management, payload)
 
             else:
                 print(request.user.role)
@@ -134,4 +191,5 @@ def add_edit_property(request, payload: AddProperty):
     return 200, {
         "status": "SUCCESS",
         "message": "Successfully added/updated building.",
+        "data": None
     }

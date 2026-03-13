@@ -1,0 +1,25 @@
+from faker import Faker
+import random
+from yourapp.models import Forms, State
+
+fake = Faker()
+
+states = list(State.objects.all())
+
+if not states:
+    raise Exception("No states found. Create states first.")
+
+forms = []
+
+for _ in range(400):
+    forms.append(
+        Forms(
+            name=fake.word().capitalize() + " Form",
+            image="forms/akors_logo_0dirJEJ.png",
+            state=random.choice(states)
+        )
+    )
+
+Forms.objects.bulk_create(forms)
+
+print("400 Forms inserted successfully")
