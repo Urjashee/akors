@@ -10,7 +10,7 @@ from stripe_integration.services import create_customer, create_subscription, ca
     get_subscription_details, get_upcoming_invoice, update_default_card, get_payment_method, get_all_invoice, \
     create_session, update_web_hook
 
-router = Router(tags=["stripe-archived"])
+router = Router(tags=["archived"])
 # Create Subscription (Fully Backend Controlled)
 @router.post(
     "/subscription/create",

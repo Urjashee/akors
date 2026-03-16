@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional, Any, List
 
 from ninja import Schema
@@ -45,6 +46,21 @@ class PropertySchema(Schema):
     state: StateSchema
     forms: list[PropertyFormSchema]
 
-class AddUnit(BaseModel):
+class AddEditUnit(BaseModel):
     id: Optional[int] = None
     state_registration: str
+    nickname: str
+    expiration_date: Optional[datetime] = None
+    unit_type: int
+    unit_class: int
+    property: int
+
+class UploadUnitImage(BaseModel):
+    unit_id: int = None
+
+class UploadUnitForm(BaseModel):
+    unit_id: int
+    form_name: str
+    expiration_date: Optional[datetime] = None
+
+

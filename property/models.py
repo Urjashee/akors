@@ -64,9 +64,9 @@ class PropertyForms(models.Model):
         db_table = "property_forms"
 
 class Unit(models.Model):
-    name = models.CharField(max_length=500)
+    nickname = models.CharField(max_length=500)
     state_registration = models.CharField(max_length=10)
-    url = models.CharField(max_length=500)
+    certificate = models.ImageField(upload_to="expiration/", null=True, blank=True)
     expiration_date = models.DateField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -81,7 +81,7 @@ class Unit(models.Model):
 
 
 class Images(models.Model):
-    url = models.CharField(max_length=500)
+    url = models.ImageField(upload_to="image/", null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -91,3 +91,18 @@ class Images(models.Model):
 
     class Meta:
         db_table = "images"
+
+
+class UnitForm(models.Model):
+    url = models.ImageField(upload_to="image/", null=True, blank=True)
+    form_name = models.CharField(max_length=500, null=False)
+    expiration_date = models.DateField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    user = models.ForeignKey(User, on_delete=models.PROTECT)
+    unit = models.ForeignKey(Unit, on_delete=models.CASCADE)
+    property = models.ForeignKey(PropertyManagement, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = "unit_forms"

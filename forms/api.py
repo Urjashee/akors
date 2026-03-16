@@ -66,7 +66,7 @@ def add_update_form(request, payload: AddEditForms = Form(...), image: UploadedF
                         form.image.delete(save=False)
 
                     form.image = image
-                    form.save()
+                form.save()
 
             else:
                 form = Forms.objects.create(

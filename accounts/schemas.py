@@ -42,6 +42,9 @@ class VerifyEmailSchema(BaseModel):
     type: int
     password: Optional[str] = None
 
+class ChangePasswordSchema(BaseModel):
+    password: str
+
 class EmailSchema(BaseModel):
     email: str
 
