@@ -665,9 +665,9 @@ def property_manager_get_profile(request):
                     "name": users.role.name,
                 },
                 "subscription": {
-                    "id": users.subscription_id,
-                    "name": users.subscription.name,
-                    "amount": users.subscription.amount,
+                    "id": users.subscription_id if users.subscription else "",
+                    "name": users.subscription.name if users.subscription else "",
+                    "amount": users.subscription.amount if users.subscription else "",
                 }
 
             }
