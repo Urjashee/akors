@@ -129,7 +129,9 @@ def create_subscription_api(request, payload: CreateSubscriptionSchema):
         return 400, {"status": "ERROR", "message": str(e)}
 
 
-@router.post("/stripe/webhook", auth=None)
+@router.post("/subscription/webhook", auth=None,
+             response={200: SuccessSchema, 400: ErrorSchema},
+             )
 def stripe_webhook(request):
     payload = request.body
     sig_header = request.headers.get("stripe-signature")
