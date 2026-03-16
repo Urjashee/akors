@@ -1,3 +1,4 @@
+from django.conf import settings
 from ninja import Router
 from django.db import transaction
 
@@ -6,7 +7,8 @@ from accounts.auth_roles_middleware import PropertyManagerAuth, SuperAdminAuth
 from stripe_integration.schemas import CreateCustomerSchema, ErrorSchema, SuccessSchema, CreateSubscriptionSchema, \
     UpdateSubscriptionSchema, UpdatePaymentMethod
 from stripe_integration.services import create_customer, create_subscription, cancel_subscription, \
-    get_subscription_details, get_upcoming_invoice, update_default_card, get_payment_method, get_all_invoice
+    get_subscription_details, get_upcoming_invoice, update_default_card, get_payment_method, get_all_invoice, \
+    create_session, update_web_hook
 
 router = Router(tags=["stripe"])
 
@@ -43,6 +45,40 @@ def create_customer_view(request, payload: CreateCustomerSchema):
             "status": "ERROR",
             "message": str(e),
         }
+
+
+@router.post(
+    "/subscription/checkout-session",
+    response={200: SuccessSchema, 400: ErrorSchema},
+)
+def create_checkout_session(request, payload: CreateSubscriptionSchema):
+    try:
+        with transaction.atomic():
+
+            user = User.objects.filter(email=request.user.email).first()
+
+            # Create Stripe customer if missing
+            if user.customer_id is None:
+                customer = create_customer(user.email, user.first_name)
+
+                if not customer:
+                    return 400, {"status": "ERROR", "message": "Could not create customer"}
+
+                user.customer_id = customer["id"]
+                user.save()
+
+            session = create_session(user, payload, settings)
+
+            return 200, {
+                "status": "SUCCESS",
+                "message": "Checkout session created",
+                "data": {
+                    "checkout_url": session.url
+                }
+            }
+
+    except Exception as e:
+        return 400, {"status": "ERROR", "message": str(e)}
 
 
 # Create Subscription (Fully Backend Controlled)
@@ -92,6 +128,47 @@ def create_subscription_api(request, payload: CreateSubscriptionSchema):
     except Exception as e:
         return 400, {"status": "ERROR", "message": str(e)}
 
+
+@router.post("/stripe/webhook", auth=None)
+def stripe_webhook(request):
+    payload = request.body
+    sig_header = request.headers.get("stripe-signature")
+
+    event = update_web_hook(payload, sig_header)
+
+    if event["type"] == "checkout.session.completed":
+
+        session = event["data"]["object"]
+
+        user_id = session["metadata"]["user_id"]
+        subscription_type = session["metadata"]["subscription_type_id"]
+        subscription_id = session["subscription"]
+
+        user = User.objects.filter(id=user_id).first()
+
+        if user:
+            user.stripe_subscription_id = subscription_id
+            user.subscription_id = subscription_type
+            user.is_subscribed = True
+            user.save()
+
+    elif event["type"] == "customer.subscription.deleted":
+
+        subscription = event["data"]["object"]
+
+        user = User.objects.filter(
+            stripe_subscription_id=subscription["id"]
+        ).first()
+
+        if user:
+            user.is_subscribed = False
+            user.save()
+
+    return 200, {
+        "status": "SUCCESS",
+        "message": "Subscription updated successfully",
+        "data": None
+    }
 
 # Update subscription details from url
 @router.post(

@@ -44,6 +44,41 @@ def create_subscription(customer_id, price_id):
         print("Stripe Error:", str(e))
         return None
 
+def create_session(user, payload, settings):
+    try:
+        return stripe.checkout.Session.create(
+                customer=user.customer_id,
+                payment_method_types=["card"],
+                mode="subscription",
+                line_items=[
+                    {
+                        "price": payload.price_id,
+                        "quantity": 1,
+                    }
+                ],
+                success_url=f"{settings.FRONTEND_URL}/subscription-success?session_id={{CHECKOUT_SESSION_ID}}",
+                cancel_url=f"{settings.FRONTEND_URL}/subscription-cancel",
+                metadata={
+                    "user_id": user.id,
+                    "subscription_type_id": payload.subscription_type_id,
+                }
+            )
+
+    except stripe.StripeError as e:
+        print("Stripe Error:", str(e))
+        return None
+
+def update_web_hook(payload, sig_header):
+    try:
+        return stripe.Webhook.construct_event(
+            payload,
+            sig_header,
+            os.getenv("STRIPE_WEBHOOK_SECRET")
+        )
+    except stripe.StripeError as e:
+        print("Stripe Error:", str(e))
+        return None
+
 def cancel_subscription(subscription_id):
     try:
         subscription = stripe.Subscription.delete(subscription_id)
