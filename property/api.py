@@ -8,6 +8,8 @@ from property.models import State, PropertyManagement
 from property.schemas import AddProperty, AssignManager, PropertySchema
 from accounts.constants import PROPERTY_MANAGER, SUPER_ADMIN, OPERATOR
 from property.services import update_property_forms
+from forms.models import Forms
+from property.models import PropertyForms
 
 router = Router(tags=["property"])
 
@@ -57,68 +59,11 @@ def assign_manager(request, payload: AssignManager):
 
 #  *************************** PROPERT MANAGER **************************************
 
-from forms.models import Forms
-from property.models import PropertyForms
-
-@router.get(
-    "/get",
-    response={200: SuccessSchema[list[PropertySchema]], 400: ErrorSchema},
-)
-def get_property(request):
-
-    buildings = (
-        PropertyManagement.objects
-        .select_related("state")
-        .filter(manager=request.user)
-    )
-
-    result = []
-
-    for building in buildings:
-
-        state_forms = Forms.objects.filter(state=building.state).select_related("state")
-
-        active_forms = set(
-            PropertyForms.objects
-            .filter(property=building)
-            .values_list("form_id", flat=True)
-        )
-        print(active_forms)
-
-        forms = []
-
-        for form in state_forms:
-            forms.append({
-                "id": form.id,
-                "name": form.name,
-                "image": form.image.url if form.image else None,
-                "active": 1 if form.id in active_forms else 0
-            })
-
-        result.append({
-            "id": building.id,
-            "name": building.name,
-            "address_line_1": building.address_line_1,
-            "address_line_2": building.address_line_2,
-            "city": building.city,
-            "zipcode": building.zipcode,
-            "property_management_company": building.property_management_company,
-            "state_registration": building.state_registration,
-            "state": {
-                "id": building.state.id,
-                "name": building.state.name
-            },
-            "forms": forms
-        })
-
-    return 200, {
-        "status": "SUCCESS",
-        "message": "Successfully fetched buildings.",
-        "data": result
-    }
-
 
 #  *************************** OPERATOR **************************************
+
+
+#  *************************** ALL **************************************
 
 @router.post(
     "/add-edit",
@@ -181,6 +126,114 @@ def add_edit_property(request, payload: AddProperty):
                         "status": "ERROR",
                         "message": "Form could not be created.",
                     }
+
+    except Exception as e:
+        return 400, {
+            "status": "ERROR",
+            "message": str(e),
+        }
+
+    return 200, {
+        "status": "SUCCESS",
+        "message": "Successfully added/updated building.",
+        "data": None
+    }
+
+
+@router.get(
+    "/get",
+    response={200: SuccessSchema[list[PropertySchema]], 400: ErrorSchema},
+)
+def get_property(request):
+    buildings = []
+    if request.user.role.id is PROPERTY_MANAGER:
+        buildings = (
+            PropertyManagement.objects
+            .select_related("state")
+            .filter(manager=request.user)
+        )
+
+    if request.user.role.id is OPERATOR:
+        buildings = (
+            PropertyManagement.objects
+            .select_related("state")
+            .filter(created_by=request.user)
+        )
+
+    if request.user.role.id is SUPER_ADMIN:
+        buildings = (
+            PropertyManagement.objects
+            .select_related("state")
+        )
+
+    result = []
+
+    for building in buildings:
+
+        state_forms = Forms.objects.filter(state=building.state).select_related("state")
+
+        active_forms = set(
+            PropertyForms.objects
+            .filter(property=building)
+            .values_list("form_id", flat=True)
+        )
+        print(active_forms)
+
+        forms = []
+
+        if request.user.role.id in [PROPERTY_MANAGER, SUPER_ADMIN]:
+            for form in state_forms:
+                forms.append({
+                    "id": form.id,
+                    "name": form.name,
+                    "image": form.image.url if form.image else None,
+                    "unit_type": form.unit_type.name,
+                    "active": 1 if form.id in active_forms else 0
+                })
+
+        if request.user.role.id is OPERATOR:
+            for form in state_forms:
+                if form.id in active_forms:
+                    forms.append({
+                        "id": form.id,
+                        "name": form.name,
+                        "image": form.image.url if form.image else None,
+                        "unit_type": form.unit_type.name,
+                        # "active": 1 if form.id in active_forms else 0
+                    })
+
+        result.append({
+            "id": building.id,
+            "name": building.name,
+            "address_line_1": building.address_line_1,
+            "address_line_2": building.address_line_2,
+            "city": building.city,
+            "zipcode": building.zipcode,
+            "property_management_company": building.property_management_company,
+            "state_registration": building.state_registration,
+            "state": {
+                "id": building.state.id,
+                "name": building.state.name
+            },
+            "forms": forms
+        })
+
+    return 200, {
+        "status": "SUCCESS",
+        "message": "Successfully fetched buildings.",
+        "data": result
+    }
+
+
+
+@router.post(
+    "/unit/add-edit",
+    response={200: SuccessSchema, 400: ErrorSchema, 403: ErrorSchema},
+)
+def add_edit_unit(request, payload: AddProperty):
+    try:
+        with transaction.atomic():
+            pass
 
     except Exception as e:
         return 400, {

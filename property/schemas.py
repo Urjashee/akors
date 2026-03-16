@@ -29,7 +29,8 @@ class PropertyFormSchema(Schema):
     id: int
     name: str
     image: str | None = None
-    active: int
+    unit_type: str | None = None
+    active: Optional[int] = None
 
 
 class PropertySchema(Schema):
@@ -43,3 +44,7 @@ class PropertySchema(Schema):
     state_registration: str
     state: StateSchema
     forms: list[PropertyFormSchema]
+
+class AddUnit(BaseModel):
+    id: Optional[int] = None
+    state_registration: str

@@ -11,11 +11,12 @@ from ninja import Query
 from .auth_roles_middleware import SuperAdminAuth, PropertyManagerAuth
 from .jwt import create_access_token, create_refresh_token
 from .schemas import SuccessSchema, ErrorSchema, RegisterSchema, VerifyEmailSchema, EmailSchema, LoginSchema, \
-    UserFilterSchema, CreatePasswordSchema, InvitedUsers, SetupAccount
+    UserFilterSchema, CreatePasswordSchema, InvitedUsers, SetupAccount, EditPropertyManager
 from .models import User, PasswordResets, Role, Title
 from .services import send_welcome_email, send_reset_email, operator_sign_up_email, create_password_email, \
     invite_user_email, process_password_setup
-from .constants import WELCOME_EMAIL, FORGOT_PASSWORD_EMAIL, OPERATOR_SIGN_UP_EMAIL, CREATE_PASSWORD_EMAIL, INVITE_EMAIL
+from .constants import WELCOME_EMAIL, FORGOT_PASSWORD_EMAIL, OPERATOR_SIGN_UP_EMAIL, CREATE_PASSWORD_EMAIL, \
+    INVITE_EMAIL, PROPERTY_MANAGER
 
 router = Router(tags=["accounts"])
 
@@ -636,6 +637,17 @@ def approve_user(request, user_id: int):
 def property_manager_get_profile(request):
     try:
         users = User.objects.filter(email=request.user.email).first()
+        if not users:
+            return 400, {
+                "status": "ERROR",
+                "message": "No user found.",
+            }
+
+        if users.role.id is not PROPERTY_MANAGER:
+            return 403, {
+                "status": "ERROR",
+                "message": "Permission denied. Property manager only.",
+            }
 
         return 200, {
             "status": "SUCCESS",
@@ -667,6 +679,47 @@ def property_manager_get_profile(request):
             "message": "Could not fetch users.",
         }
 
+
+@router.post(
+    "/property-manager/profile/edit",
+    auth=PropertyManagerAuth(),
+    response={ 200: SuccessSchema, 400: ErrorSchema, 403: ErrorSchema },
+)
+def property_manager_edit_profile(request, payload: EditPropertyManager):
+    try:
+        with transaction.atomic():
+            user = User.objects.filter(email=request.user.email).first()
+            print(user)
+            if not user:
+                return 400, {
+                    "status": "ERROR",
+                    "message": "No user found.",
+                }
+
+            if user.role.id is not PROPERTY_MANAGER:
+                return 403, {
+                    "status": "ERROR",
+                    "message": "Permission denied. Property manager only.",
+                }
+
+            user.first_name = payload.first_name
+            user.last_name = payload.last_name
+            user.company_name = payload.company_name
+            user.company_address = payload.company_address
+            user.phone_number = payload.phone_number
+            user.save(update_fields=["first_name", "last_name", "company_name", "company_address", "phone_number"])
+
+    except Exception as e:
+        return 400, {
+            "status": "ERROR",
+            "message": f"Could not fetch users. {str(e)}",
+        }
+
+    return 200, {
+        "status": "SUCCESS",
+        "message": "Successfully updated property manager.",
+        "data": None
+    }
 
 @router.post(
     "/property-manager/invite-users",

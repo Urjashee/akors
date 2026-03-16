@@ -67,3 +67,12 @@ class SetupAccount(BaseModel):
     token: str
     qei_number: str
     password: str
+
+class EditPropertyManager(BaseModel):
+
+    first_name: str
+    last_name: str
+
+    company_name: Optional[str] = None
+    company_address: Optional[str] = None
+    phone_number: Optional[str] = None

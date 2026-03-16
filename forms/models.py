@@ -1,6 +1,6 @@
 from django.db import models
 
-from property.models import State
+from property.models import State, UnitType
 
 
 class Forms(models.Model):
@@ -12,6 +12,7 @@ class Forms(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     state = models.ForeignKey(State, on_delete=models.PROTECT, null=True)
+    unit_type = models.ForeignKey(UnitType, on_delete=models.PROTECT, null=True, default=2)
     # user = models.ForeignKey(User, on_delete=models.PROTECT)
     # unit = models.ForeignKey(Unit, on_delete=models.CASCADE)
     # property = models.ForeignKey(PropertyManagement, on_delete=models.CASCADE)
