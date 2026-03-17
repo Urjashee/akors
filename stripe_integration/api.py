@@ -8,7 +8,7 @@ from stripe_integration.schemas import CreateCustomerSchema, ErrorSchema, Succes
     UpdateSubscriptionSchema, UpdatePaymentMethod
 from stripe_integration.services import create_customer, create_subscription, cancel_subscription, \
     get_subscription_details, get_upcoming_invoice, update_default_card, get_payment_method, get_all_invoice, \
-    create_session, update_web_hook
+    create_session, update_web_hook, get_invoice_details, get_sub_details
 
 router = Router(tags=["stripe"])
 
@@ -171,17 +171,12 @@ def subscription_details_api(request):
         history = []
 
         for invoice in invoices.data:
-            history.append({
-                "invoice_id": invoice.id,
-                "invoice_number": invoice.number,
-                "amount_paid": invoice.amount_paid / 100,
-                "currency": invoice.currency,
-                "status": invoice.status,
-                "invoice_date": invoice.created,
-                "invoice_pdf": invoice.invoice_pdf
-            })
+            fetch_invoice_details = get_invoice_details(invoice)
+            history.append(fetch_invoice_details)
 
         item = subscription["items"]["data"][0]
+
+        fetch_sub_details = get_sub_details(subscription, item, history, payment_method)
 
         data = {
             "subscription_id": subscription["id"],

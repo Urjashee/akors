@@ -5,6 +5,7 @@ from django.conf import settings
 from django.utils import timezone
 from accounts.models import PasswordResets
 
+
 def send_welcome_email(user, token, type):
     subject = "Welcome to Akors 🎉"
     from_email = settings.DEFAULT_FROM_EMAIL
@@ -26,6 +27,7 @@ def send_welcome_email(user, token, type):
 
     return sent_count
 
+
 def invite_user_email(user, token, type):
     subject = "Welcome to Akors 🎉"
     from_email = settings.DEFAULT_FROM_EMAIL
@@ -46,6 +48,7 @@ def invite_user_email(user, token, type):
     sent_count = email.send()
 
     return sent_count
+
 
 def send_reset_email(user, token, type):
     subject = "Mail from Akors"
@@ -89,6 +92,7 @@ def operator_sign_up_email(user, token, type):
     sent_count = email.send()
 
     return sent_count
+
 
 def create_password_email(user, token, type):
     subject = "Welcome to Akors 🎉"
@@ -150,3 +154,56 @@ def process_password_setup(token, password, qei_number=None):
     user.save(update_fields=update_fields)
 
     return user, None
+
+
+def property_manager_details(users):
+    return {
+        "id": users.id,
+        "email": users.email,
+        "first_name": users.first_name,
+        "last_name": users.last_name,
+        "phone_number": users.phone_number,
+        "company_name": users.company_name,
+        "company_address": users.company_address,
+        "role": {
+            "id": users.role_id,
+            "name": users.role.name,
+        },
+        "subscription": {
+            "id": users.subscription_id if users.subscription else "",
+            "name": users.subscription.name if users.subscription else "",
+            "amount": users.subscription.amount if users.subscription else "",
+        }
+
+    }
+
+def operator_details(users):
+    return {
+                "id": users.id,
+                "email": users.email,
+                "first_name": users.first_name,
+                "last_name": users.last_name,
+                "title": {
+                    "id": users.title.id,
+                    "name": users.title.name,
+                },
+                "qei_no": users.qei_number,
+                "role": {
+                    "id": users.role_id,
+                    "name": users.role.name,
+                },
+                "subscription": {
+                    "id": users.subscription_id if users.subscription else "",
+                    "name": users.subscription.name if users.subscription else "",
+                    "amount": users.subscription.amount if users.subscription else "",
+                },
+                "invited_by": {
+                    "id": users.property_id,
+                    "name": f"{users.property.first_name} {users.property.last_name}",
+                    "email": f"{users.property.email}",
+                    "phone_number": users.property.phone_number,
+                    "company_name": users.property.company_name,
+                    "company_address": users.property.company_address,
+                } if users.property else None
+
+            }

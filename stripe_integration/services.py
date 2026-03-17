@@ -23,11 +23,12 @@ def create_customer(email, name=None):
         print("Stripe Error:", str(e))
         return None
 
+
 def create_subscription(customer_id, price_id):
     try:
         subscription = stripe.Subscription.create(
-            customer=customer_id, #cus_U37CoNohPEHeTC
-            items=[{"price": price_id}], # price_1T504UBDnPGPFOY8VTUSq0Wc
+            customer=customer_id,  # cus_U37CoNohPEHeTC
+            items=[{"price": price_id}],  # price_1T504UBDnPGPFOY8VTUSq0Wc
             payment_settings={
                 "save_default_payment_method": "on_subscription"
             },
@@ -44,29 +45,31 @@ def create_subscription(customer_id, price_id):
         print("Stripe Error:", str(e))
         return None
 
+
 def create_session(user, payload, settings):
     try:
         return stripe.checkout.Session.create(
-                customer=user.customer_id,
-                payment_method_types=["card"],
-                mode="subscription",
-                line_items=[
-                    {
-                        "price": payload.price_id,
-                        "quantity": 1,
-                    }
-                ],
-                success_url=f"{settings.FRONTEND_URL}/subscription-success?session_id={{CHECKOUT_SESSION_ID}}",
-                cancel_url=f"{settings.FRONTEND_URL}/subscription-cancel",
-                metadata={
-                    "user_id": user.id,
-                    "subscription_type_id": payload.subscription_type_id,
+            customer=user.customer_id,
+            payment_method_types=["card"],
+            mode="subscription",
+            line_items=[
+                {
+                    "price": payload.price_id,
+                    "quantity": 1,
                 }
-            )
+            ],
+            success_url=f"{settings.FRONTEND_URL}/subscription-success?session_id={{CHECKOUT_SESSION_ID}}",
+            cancel_url=f"{settings.FRONTEND_URL}/subscription-cancel",
+            metadata={
+                "user_id": user.id,
+                "subscription_type_id": payload.subscription_type_id,
+            }
+        )
 
     except stripe.StripeError as e:
         print("Stripe Error:", str(e))
         return None
+
 
 def update_web_hook(payload, sig_header):
     try:
@@ -78,6 +81,7 @@ def update_web_hook(payload, sig_header):
     except stripe.StripeError as e:
         print("Stripe Error:", str(e))
         return None
+
 
 def cancel_subscription(subscription_id):
     try:
@@ -92,6 +96,7 @@ def cancel_subscription(subscription_id):
         print("Stripe Error:", str(e))
         return None
 
+
 def get_subscription_details(subscription_id):
     try:
         subscription = stripe.Subscription.retrieve(
@@ -105,6 +110,7 @@ def get_subscription_details(subscription_id):
         print("Stripe Error:", str(e))
         return None
 
+
 def get_upcoming_invoice(customer_id, subscription_id):
     try:
         upcoming_invoice = stripe.Invoice.upcoming(
@@ -117,6 +123,7 @@ def get_upcoming_invoice(customer_id, subscription_id):
     except stripe.StripeError:
         return None
 
+
 def get_all_invoice(customer_id):
     try:
         invoices = stripe.Invoice.list(
@@ -127,6 +134,7 @@ def get_all_invoice(customer_id):
 
     except stripe.StripeError:
         return None
+
 
 def get_payment_method(payment_method_id):
     try:
@@ -162,3 +170,30 @@ def update_default_card(customer_id, subscription_id, payment_method_id):
     except stripe.error.StripeError as e:
         print(str(e))
         return False
+
+
+def get_invoice_details(invoice):
+    return {
+        "invoice_id": invoice.id,
+        "invoice_number": invoice.number,
+        "amount_paid": invoice.amount_paid / 100,
+        "currency": invoice.currency,
+        "status": invoice.status,
+        "invoice_date": invoice.created,
+        "invoice_pdf": invoice.invoice_pdf
+    }
+
+
+def get_sub_details(subscription, item, history, payment_method):
+    return {
+            "subscription_id": subscription["id"],
+            "status": subscription["status"],
+            "plan_price": subscription["plan"]["amount"] / 100,
+            "billing_interval": subscription["plan"]["interval"],
+            "last_bill_amount": subscription["latest_invoice"]["amount_paid"] / 100,
+            "last_bill_date": subscription["latest_invoice"]["status_transitions"]["paid_at"],
+            "next_bill_date": item["current_period_end"],
+            "cancelled": subscription["canceled_at"] is not None,
+            "invoices": history,
+            "default_payment_method": payment_method.card,
+        }

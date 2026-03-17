@@ -5,10 +5,11 @@ from ninja.files import UploadedFile
 from accounts.auth_roles_middleware import OperatorAuth, SuperAdminAuth
 from accounts.models import User
 from accounts.schemas import SuccessSchema, ErrorSchema
+from accounts.services import operator_details, property_manager_details
 from property.models import State, PropertyManagement, Unit, UnitType, UnitClass, Images, UnitForm
 from property.schemas import AddProperty, AssignManager, PropertySchema, AddEditUnit, UploadUnitImage, UploadUnitForm
 from accounts.constants import PROPERTY_MANAGER, SUPER_ADMIN, OPERATOR
-from property.services import update_property_forms
+from property.services import update_property_forms, get_building_details
 from forms.models import Forms
 from property.models import PropertyForms
 
@@ -57,6 +58,25 @@ def assign_manager(request, payload: AssignManager):
         "data": None
     }
 
+@router.get(
+    "/get-user-details/{user_id}",
+    auth=SuperAdminAuth(),
+    response={200: SuccessSchema, 400: ErrorSchema},
+)
+def get_user_details(request, user_id: int):
+    buildings = []
+    profile = None
+    user = User.objects.get(id=user_id)
+
+    if user.role.id == OPERATOR:
+        fetch_user_details = operator_details(user)
+
+    if user.role.id == PROPERTY_MANAGER:
+        fetch_user_details = property_manager_details(user)
+
+
+
+
 
 #  *************************** PROPERT MANAGER **************************************
 
@@ -83,9 +103,9 @@ def add_edit_property(request, payload: AddProperty):
                 property_management.city = payload.city
                 property_management.zipcode = payload.zipcode
                 property_management.state = state
-                if request.user.role.id is OPERATOR:
+                if request.user.role.id == OPERATOR:
                     property_management.state_registration = payload.state_registration
-                if request.user.role.id is SUPER_ADMIN:
+                if request.user.role.id == SUPER_ADMIN:
                     user = User.objects.get(id=payload.manager_id)
                     if not user:
                         return 400, {
@@ -100,7 +120,7 @@ def add_edit_property(request, payload: AddProperty):
                     property_management.state_registration = payload.state_registration
                     property_management.manager_id = payload.manager_id
                 property_management.save()
-                if request.user.role.id is PROPERTY_MANAGER:
+                if request.user.role.id == PROPERTY_MANAGER:
                     update_property_forms(property_management, payload)
 
             else:
@@ -147,21 +167,21 @@ def add_edit_property(request, payload: AddProperty):
 )
 def get_property(request):
     buildings = []
-    if request.user.role.id is PROPERTY_MANAGER:
+    if request.user.role.id == PROPERTY_MANAGER:
         buildings = (
             PropertyManagement.objects
             .select_related("state")
             .filter(manager=request.user)
         )
 
-    if request.user.role.id is OPERATOR:
+    if request.user.role.id == OPERATOR:
         buildings = (
             PropertyManagement.objects
             .select_related("state")
             .filter(created_by=request.user)
         )
 
-    if request.user.role.id is SUPER_ADMIN:
+    if request.user.role.id == SUPER_ADMIN:
         buildings = (
             PropertyManagement.objects
             .select_related("state")
@@ -192,7 +212,7 @@ def get_property(request):
                     "active": 1 if form.id in active_forms else 0
                 })
 
-        if request.user.role.id is OPERATOR:
+        if request.user.role.id == OPERATOR:
             for form in state_forms:
                 if form.id in active_forms:
                     forms.append({
@@ -203,21 +223,9 @@ def get_property(request):
                         # "active": 1 if form.id in active_forms else 0
                     })
 
-        result.append({
-            "id": building.id,
-            "name": building.name,
-            "address_line_1": building.address_line_1,
-            "address_line_2": building.address_line_2,
-            "city": building.city,
-            "zipcode": building.zipcode,
-            "property_management_company": building.property_management_company,
-            "state_registration": building.state_registration,
-            "state": {
-                "id": building.state.id,
-                "name": building.state.name
-            },
-            "forms": forms
-        })
+        fetch_building_details = get_building_details(building)
+        fetch_building_details["forms"] = forms
+        result.append(fetch_building_details)
 
     return 200, {
         "status": "SUCCESS",
@@ -242,7 +250,7 @@ def add_edit_unit(request, payload: AddEditUnit = Form(...), certificate: Upload
                 unit.state_registration = payload.state_registration
                 unit.unit_type = unit_type
                 unit.unit_class = unit_class
-                if request.user.role.id is PROPERTY_MANAGER:
+                if request.user.role.id == PROPERTY_MANAGER:
                     unit.expiration_date = payload.expiration_date
                     if unit.certificate:
                         unit.certificate.delete(save=False)

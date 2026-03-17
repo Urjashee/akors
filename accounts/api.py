@@ -14,7 +14,7 @@ from .schemas import SuccessSchema, ErrorSchema, RegisterSchema, VerifyEmailSche
     UserFilterSchema, CreatePasswordSchema, InvitedUsers, SetupAccount, EditPropertyManager, ChangePasswordSchema
 from .models import User, PasswordResets, Role, Title
 from .services import send_welcome_email, send_reset_email, operator_sign_up_email, create_password_email, \
-    invite_user_email, process_password_setup
+    invite_user_email, process_password_setup, property_manager_details, operator_details
 from .constants import WELCOME_EMAIL, FORGOT_PASSWORD_EMAIL, OPERATOR_SIGN_UP_EMAIL, CREATE_PASSWORD_EMAIL, \
     INVITE_EMAIL, PROPERTY_MANAGER, OPERATOR
 
@@ -649,28 +649,12 @@ def property_manager_get_profile(request):
                 "message": "Permission denied. Property manager only.",
             }
 
+        fetch_property_manager = property_manager_details(users)
+
         return 200, {
             "status": "SUCCESS",
             "message": "Users fetched successfully.",
-            "data": {
-                "id": users.id,
-                "email": users.email,
-                "first_name": users.first_name,
-                "last_name": users.last_name,
-                "phone_number": users.phone_number,
-                "company_name": users.company_name,
-                "company_address": users.company_address,
-                "role": {
-                    "id": users.role_id,
-                    "name": users.role.name,
-                },
-                "subscription": {
-                    "id": users.subscription_id if users.subscription else "",
-                    "name": users.subscription.name if users.subscription else "",
-                    "amount": users.subscription.amount if users.subscription else "",
-                }
-
-            }
+            "data": fetch_property_manager
         }
 
     except Exception:
@@ -841,38 +825,12 @@ def operator_get_profile(request):
                 "message": "Permission denied. Operator only.",
             }
 
+        fetch_operator = operator_details(users)
+
         return 200, {
             "status": "SUCCESS",
             "message": "Users fetched successfully.",
-            "data": {
-                "id": users.id,
-                "email": users.email,
-                "first_name": users.first_name,
-                "last_name": users.last_name,
-                "title": {
-                    "id": users.title.id,
-                    "name": users.title.name,
-                },
-                "qei_no": users.qei_number,
-                "role": {
-                    "id": users.role_id,
-                    "name": users.role.name,
-                },
-                "subscription": {
-                    "id": users.subscription_id if users.subscription else "",
-                    "name": users.subscription.name if users.subscription else "",
-                    "amount": users.subscription.amount if users.subscription else "",
-                },
-                "invited_by": {
-                    "id": users.property_id,
-                    "name": f"{users.property.first_name} {users.property.last_name}",
-                    "email": f"{users.property.email}",
-                    "phone_number": users.property.phone_number,
-                    "company_name": users.property.company_name,
-                    "company_address": users.property.company_address,
-                } if users.property else None
-
-            }
+            "data": fetch_operator
         }
 
     except Exception as e:
@@ -882,7 +840,7 @@ def operator_get_profile(request):
         }
 
 
-#   ************************************************** ALL ***************************************
+#   *************************** ALL ***************************************
 
 @router.post(
     "/change-password",
