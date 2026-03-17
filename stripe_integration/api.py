@@ -178,23 +178,10 @@ def subscription_details_api(request):
 
         fetch_sub_details = get_sub_details(subscription, item, history, payment_method)
 
-        data = {
-            "subscription_id": subscription["id"],
-            "status": subscription["status"],
-            "plan_price": subscription["plan"]["amount"] / 100,
-            "billing_interval": subscription["plan"]["interval"],
-            "last_bill_amount": subscription["latest_invoice"]["amount_paid"] / 100,
-            "last_bill_date": subscription["latest_invoice"]["status_transitions"]["paid_at"],
-            "next_bill_date": item["current_period_end"],
-            "cancelled": subscription["canceled_at"] is not None,
-            "invoices": history,
-            "default_payment_method": payment_method.card,
-        }
-
         return 200, {
             "status": "SUCCESS",
             "message": "Subscription details retrieved successfully",
-            "data": data
+            "data": fetch_sub_details
         }
 
     except Exception as e:

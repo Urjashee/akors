@@ -45,6 +45,7 @@ class PropertySchema(Schema):
     state_registration: str
     state: StateSchema
     forms: list[PropertyFormSchema]
+    unit_count: int
 
 class AddEditUnit(BaseModel):
     id: Optional[int] = None

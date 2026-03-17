@@ -12,6 +12,7 @@ from accounts.constants import PROPERTY_MANAGER, SUPER_ADMIN, OPERATOR
 from property.services import update_property_forms, get_building_details
 from forms.models import Forms
 from property.models import PropertyForms
+from stripe_integration.services import get_all_invoice, get_invoice_details
 
 router = Router(tags=["property"])
 
@@ -65,14 +66,51 @@ def assign_manager(request, payload: AssignManager):
 )
 def get_user_details(request, user_id: int):
     buildings = []
-    profile = None
+    property_management = []
+    history = []
+    fetch_user_details = None
     user = User.objects.get(id=user_id)
 
+    if not user.customer_id:
+        history = []
+    else:
+        invoices = get_all_invoice(user.customer_id)
+        for invoice in invoices.data:
+            fetch_invoice_details = get_invoice_details(invoice)
+            history.append(fetch_invoice_details)
+
     if user.role.id == OPERATOR:
+        property_management = (
+            PropertyManagement.objects
+            .select_related("state")
+            .filter(created_by=user_id)
+        )
         fetch_user_details = operator_details(user)
 
     if user.role.id == PROPERTY_MANAGER:
+        property_management = (
+            PropertyManagement.objects
+            .select_related("state")
+            .filter(manager=user_id)
+        )
         fetch_user_details = property_manager_details(user)
+
+    for properties in property_management:
+        unit_count = Unit.objects.filter(property=properties).count()
+        fetch_building_details = get_building_details(properties)
+        fetch_building_details["unit_count"] = unit_count
+        buildings.append(fetch_building_details)
+
+
+    return 200, {
+        "status": "SUCCESS",
+        "message": "Successfully fetch user details.",
+        "data": {
+            "user": fetch_user_details,
+            "buildings": buildings,
+            "payment_history": history,
+        }
+    }
 
 
 
@@ -191,6 +229,8 @@ def get_property(request):
 
     for building in buildings:
 
+        unit_count = Unit.objects.filter(property=building).count()
+        print("unit_count", unit_count)
         state_forms = Forms.objects.filter(state=building.state).select_related("state")
 
         active_forms = set(
@@ -225,6 +265,7 @@ def get_property(request):
 
         fetch_building_details = get_building_details(building)
         fetch_building_details["forms"] = forms
+        fetch_building_details["unit_count"] = unit_count
         result.append(fetch_building_details)
 
     return 200, {
