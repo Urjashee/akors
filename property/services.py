@@ -46,3 +46,18 @@ def get_building_details(building):
             },
             # "forms": forms
         }
+
+def get_unit_details(unit, forms, images):
+    return {
+            "id": unit.id,
+            "nickname": unit.nickname,
+            "state_registration": unit.state_registration,
+            "expiration_date": unit.expiration_date,
+            "certificate": unit.certificate,
+            "unit_type": unit.unit_type,
+            "unit_class": unit.unit_class,
+            "user": unit.user,
+            "property": unit.property,
+            "forms": forms,
+            "images": images,
+        }

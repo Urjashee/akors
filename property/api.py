@@ -7,9 +7,10 @@ from accounts.models import User
 from accounts.schemas import SuccessSchema, ErrorSchema
 from accounts.services import operator_details, property_manager_details
 from property.models import State, PropertyManagement, Unit, UnitType, UnitClass, Images, UnitForm
-from property.schemas import AddProperty, AssignManager, PropertySchema, AddEditUnit, UploadUnitImage, UploadUnitForm
+from property.schemas import AddProperty, AssignManager, PropertySchema, AddEditUnit, UploadUnitImage, UploadUnitForm, \
+    UnitSchema
 from accounts.constants import PROPERTY_MANAGER, SUPER_ADMIN, OPERATOR
-from property.services import update_property_forms, get_building_details
+from property.services import update_property_forms, get_building_details, get_unit_details
 from forms.models import Forms
 from property.models import PropertyForms
 from stripe_integration.services import get_all_invoice, get_invoice_details
@@ -107,12 +108,10 @@ def get_user_details(request, user_id: int):
         "message": "Successfully fetch user details.",
         "data": {
             "user": fetch_user_details,
-            "buildings": buildings,
+            "property": buildings,
             "payment_history": history,
         }
     }
-
-
 
 
 
@@ -404,3 +403,47 @@ def add_unit_image(
 
     except Exception as e:
         return 400, {"status": "ERROR", "message": str(e)}
+
+
+@router.get(
+    "/units/get/{property_id}",
+    response={200: SuccessSchema[list[UnitSchema]], 400: ErrorSchema},
+)
+def get_units(request, property_id: int):
+    units = []
+    data = []
+    if request.user.role.id == OPERATOR:
+        units = Unit.objects.filter(user=request.user, property=property_id)
+        if not units:
+            return 400, {
+                "status": "ERROR",
+                "message": "No units found.",
+            }
+
+    if request.user.role.id == PROPERTY_MANAGER:
+        units = Unit.objects.filter(property=property_id)
+        if not units:
+            return 400, {
+                "status": "ERROR",
+                "message": "No units found.",
+            }
+
+    for unit in units:
+        forms = UnitForm.objects.filter(unit=unit.id)
+        images = Images.objects.filter(unit=unit.id)
+
+        forms_count = len(forms)
+        images_count = len(images)
+
+        fetch_unit_data = get_unit_details(unit, forms, images)
+        fetch_unit_data['forms_count'] = forms_count
+        fetch_unit_data['images_count'] = images_count
+
+        data.append(fetch_unit_data)
+
+
+    return 200, {
+        "status": "SUCCESS",
+        "message": "Successfully fetched buildings.",
+        "data": data
+    }
