@@ -26,3 +26,30 @@ def get_user_from_token(token: str):
 
     except JWTError:
         raise HttpError(401, "Invalid token!")
+
+
+def get_user_from_refresh_token(token: str):
+    try:
+        payload = jwt.decode(
+            token,
+            settings.JWT_SECRET_KEY,
+            algorithms=[settings.JWT_ALGORITHM],
+        )
+
+        if payload.get("type") != "refresh":
+            raise HttpError(401, "Invalid refresh token")
+
+        user_id = payload.get("id")
+
+        user = User.objects.filter(id=user_id).first()
+
+        if not user:
+            raise HttpError(401, "User not found")
+
+        return user, payload
+
+    except ExpiredSignatureError:
+        raise HttpError(401, "Refresh token expired!")
+
+    except JWTError:
+        raise HttpError(401, "Invalid refresh token!")

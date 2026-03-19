@@ -93,7 +93,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     subscription = models.ForeignKey(Subscriptions, on_delete=models.PROTECT, related_name="users", null=True, blank=True)
     property = models.ForeignKey("self", on_delete=models.PROTECT, related_name="users", null=True, blank=True)
 
-    objects = UserManager()  # ✅ THIS FIXES THE ERROR
+    objects = UserManager()
 
     USERNAME_FIELD = "email"
 
@@ -113,3 +113,14 @@ class PasswordResets(models.Model):
 
     class Meta:
         db_table = "password_resets"
+
+
+class RefreshToken(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    token = models.CharField(max_length=1000)
+    uuid = models.CharField(max_length=100, null=False, default="UUID")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "refresh_tokens"

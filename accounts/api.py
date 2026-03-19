@@ -1,4 +1,5 @@
 import secrets
+import uuid
 from datetime import timedelta
 
 from django.utils import timezone
@@ -7,14 +8,15 @@ from django.db import transaction
 from django.db.models import F
 
 from ninja import Query
+from ninja.errors import HttpError
 
 from .auth_roles_middleware import SuperAdminAuth, PropertyManagerAuth, OperatorAuth
 from .jwt import create_access_token, create_refresh_token
 from .schemas import SuccessSchema, ErrorSchema, RegisterSchema, VerifyEmailSchema, EmailSchema, LoginSchema, \
     UserFilterSchema, CreatePasswordSchema, InvitedUsers, SetupAccount, EditPropertyManager, ChangePasswordSchema
-from .models import User, PasswordResets, Role, Title
+from .models import User, PasswordResets, Role, Title, RefreshToken
 from .services import send_welcome_email, send_reset_email, operator_sign_up_email, create_password_email, \
-    invite_user_email, process_password_setup, property_manager_details, operator_details
+    invite_user_email, process_password_setup, property_manager_details, operator_details, get_user_from_refresh_token
 from .constants import WELCOME_EMAIL, FORGOT_PASSWORD_EMAIL, OPERATOR_SIGN_UP_EMAIL, CREATE_PASSWORD_EMAIL, \
     INVITE_EMAIL, PROPERTY_MANAGER, OPERATOR
 
@@ -426,6 +428,31 @@ def login(request, payload: LoginSchema):
                     "message": "Please verify your email first.",
                 }
 
+            new_uuid = uuid.uuid4()
+            access_token = create_access_token(user)
+            refresh_token = create_refresh_token(user, new_uuid)
+
+            update_refresh_token = RefreshToken.objects.create(
+                token=refresh_token,
+                user=user,
+                uuid=new_uuid,
+            )
+
+            if not update_refresh_token:
+                return 400, {
+                    "status": "ERROR",
+                    "message": "Could not update refresh token. Please try again later.",
+                }
+
+            return 200, {
+                "status": "SUCCESS",
+                "message": "Login successful.",
+                "data": {
+                    "access_token": access_token,
+                    "refresh_token": refresh_token
+                }
+            }
+
 
     except Exception as e:
         return 400, {
@@ -434,14 +461,48 @@ def login(request, payload: LoginSchema):
 
         }
 
-    return 200, {
-        "status": "SUCCESS",
-        "message": "Login successful.",
-        "data": {
-            "access_token": create_access_token(user),
-            "refresh_token": create_refresh_token(user)
+
+@router.post(
+    "refresh-token",
+    auth=None,
+    response={200: SuccessSchema, 400: ErrorSchema, 401: ErrorSchema},
+)
+def refresh_token(request):
+    try:
+        auth = request.headers.get("Authorization")
+
+        if not auth or not auth.startswith("Bearer "):
+            return 401, {
+                "status": "ERROR",
+                "message": "Invalid authorization header.",
+            }
+
+        token = auth.split(" ")[1]
+
+        user, payload = get_user_from_refresh_token(token)
+
+        new_access_token = create_access_token(user)
+
+        return 200, {
+            "status": "SUCCESS",
+            "message": "Token refreshed successfully.",
+            "data": {
+                "access_token": new_access_token
+            }
         }
-    }
+
+    except HttpError as e:
+        return e.status_code, {
+            "status": "ERROR",
+            "message": str(e),
+        }
+
+    except Exception as e:
+        return 400, {
+            "status": "ERROR",
+            "message": str(e),
+
+        }
 
 
 @router.post(

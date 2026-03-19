@@ -3,7 +3,9 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.conf import settings
 from django.utils import timezone
-from accounts.models import PasswordResets
+from jose import jwt, ExpiredSignatureError
+
+from accounts.models import PasswordResets, User
 
 
 def send_welcome_email(user, token, type):
@@ -207,3 +209,42 @@ def operator_details(users):
                 } if users.property else None
 
             }
+
+
+def get_user_from_refresh_token(token: str):
+    try:
+        payload = jwt.decode(
+            token,
+            settings.JWT_SECRET_KEY,
+            algorithms=[settings.JWT_ALGORITHM],
+        )
+
+        if payload.get("type") != "refresh":
+            return 401, {
+                "status": "ERROR",
+                "message": "Invalid token type.",
+            }
+
+        user_id = payload.get("id")
+
+        if not user_id:
+            return 401, {
+                "status": "ERROR",
+                "message": "Invalid token payload.",
+            }
+
+        user = User.objects.filter(id=user_id).first()
+
+        if not user:
+            return 400, {
+                "status": "ERROR",
+                "message": "User not found.",
+            }
+
+        return user, payload
+
+    except ExpiredSignatureError:
+        return 400, {
+            "status": "ERROR",
+            "message": "Refresh token expired.",
+        }

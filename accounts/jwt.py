@@ -27,7 +27,7 @@ def create_access_token(user: any):
     return jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
 
 
-def create_refresh_token(user: any):
+def create_refresh_token(user: any, uuid: str):
     payload = {
         "id": user.id,
         "email": str(user.email),
@@ -47,6 +47,7 @@ def create_refresh_token(user: any):
         "exp": datetime.utcnow() + timedelta(
             days=settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS
         ),
+        "uuid": str(uuid),
         "invited_by": user.property_id if user.property_id else None,
     }
     return jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)

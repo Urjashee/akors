@@ -371,7 +371,7 @@ def add_unit_image(
     "/unit/add-form",
     response={200: SuccessSchema, 400: ErrorSchema},
 )
-def add_unit_image(
+def add_unit_form(
     request,
     payload: UploadUnitForm = Form(...),
     image: UploadedFile = File(...)
@@ -400,6 +400,58 @@ def add_unit_image(
 
     except Unit.DoesNotExist:
         return 400, {"status": "ERROR", "message": "Unit not found"}
+
+    except Exception as e:
+        return 400, {"status": "ERROR", "message": str(e)}
+
+
+@router.delete(
+    "/unit/delete-form/{unit_form_id}",
+    response={200: SuccessSchema, 400: ErrorSchema},
+)
+def delete_unit_form(
+    request, unit_form_id: int,
+):
+    try:
+        unit_form = UnitForm.objects.get(id=unit_form_id)
+        if not unit_form.id:
+            return 400, {
+                "status": "ERROR",
+                "message": "Unit form could not be found.",
+            }
+        with transaction.atomic():
+            unit_form.delete()
+
+        return 200, {
+            "status": "SUCCESS",
+            "message": "Successfully deleted unit form.",
+        }
+
+    except Exception as e:
+        return 400, {"status": "ERROR", "message": str(e)}
+
+
+@router.delete(
+    "/unit/delete-image/{unit_form_id}",
+    response={200: SuccessSchema, 400: ErrorSchema},
+)
+def delete_unit_image(
+    request, unit_form_id: int,
+):
+    try:
+        unit_image = Images.objects.get(id=unit_form_id)
+        if not unit_image.id:
+            return 400, {
+                "status": "ERROR",
+                "message": "Unit form could not be found.",
+            }
+        with transaction.atomic():
+            unit_image.delete()
+
+        return 200, {
+            "status": "SUCCESS",
+            "message": "Successfully deleted unit image.",
+        }
 
     except Exception as e:
         return 400, {"status": "ERROR", "message": str(e)}
