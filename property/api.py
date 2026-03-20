@@ -1,6 +1,7 @@
 from ninja import Router, Form, File
 from django.db import transaction
 from ninja.files import UploadedFile
+from django.db.models import Q
 
 from accounts.auth_roles_middleware import OperatorAuth, SuperAdminAuth
 from accounts.models import User
@@ -272,6 +273,70 @@ def get_property(request):
         "message": "Successfully fetched buildings.",
         "data": result
     }
+
+
+@router.get(
+    "/search",
+    auth=None,
+    response={200: SuccessSchema[list[PropertySchema]], 400: ErrorSchema},
+)
+def search_property(request, query: str = ""):
+    try:
+        buildings = PropertyManagement.objects.select_related("state")
+
+        if query:
+            buildings = buildings.filter(
+                Q(name__icontains=query) |
+                Q(property_management_company__icontains=query) |
+                Q(address_line_1__icontains=query) |
+                Q(address_line_2__icontains=query) |
+                Q(city__icontains=query) |
+                Q(zipcode__icontains=query) |
+                Q(state__name__icontains=query)
+            )
+
+        result = []
+
+        for building in buildings:
+
+            unit_count = Unit.objects.filter(property=building).count()
+
+            state_forms = Forms.objects.filter(state=building.state)
+
+            active_forms = set(
+                PropertyForms.objects
+                .filter(property=building)
+                .values_list("form_id", flat=True)
+            )
+
+            forms = []
+            for form in state_forms:
+                if form.id in active_forms:
+                    forms.append({
+                        "id": form.id,
+                        "name": form.name,
+                        "image": form.image.url if form.image else None,
+                        "unit_type": form.unit_type.name,
+                        # "active": 1 if form.id in active_forms else 0
+                    })
+
+            data = get_building_details(building)
+            data["forms"] = forms
+            data["unit_count"] = unit_count
+
+            result.append(data)
+
+        return 200, {
+            "status": "SUCCESS",
+            "message": "Successfully fetched buildings.",
+            "data": result
+        }
+
+    except Exception as e:
+        return 400, {
+            "status": "ERROR",
+            "message": str(e),
+        }
 
 
 @router.post(

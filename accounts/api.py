@@ -453,7 +453,6 @@ def login(request, payload: LoginSchema):
                 }
             }
 
-
     except Exception as e:
         return 400, {
             "status": "ERROR",

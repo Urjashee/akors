@@ -48,7 +48,7 @@ class AddProperty(BaseModel):
     address_line_2: str
     city: str
     zipcode: str
-    state: StateSchema
+    state_id: int
     forms: Optional[List[int]] = None
 
 class AssignManager(BaseModel):
