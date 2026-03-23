@@ -11,7 +11,7 @@ from property.models import State, PropertyManagement, Unit, UnitType, UnitClass
 from property.schemas import AddProperty, AssignManager, PropertySchema, AddEditUnit, UploadUnitImage, UploadUnitForm, \
     UnitSchema
 from accounts.constants import PROPERTY_MANAGER, SUPER_ADMIN, OPERATOR
-from property.services import update_property_forms, get_building_details, get_unit_details
+from property.services import update_property_forms, get_building_details, get_unit_details, check_if_subscription
 from forms.models import Forms
 from property.models import PropertyForms
 from stripe_integration.services import get_all_invoice, get_invoice_details
@@ -344,6 +344,12 @@ def search_property(request, query: str = ""):
     response={200: SuccessSchema, 400: ErrorSchema, 403: ErrorSchema},
 )
 def add_edit_unit(request, payload: AddEditUnit = Form(...), certificate: UploadedFile = File(None)):
+    # check_subscription = check_if_subscription(payload, request.user)
+    # if not check_subscription:
+    #     return 400, {
+    #         "status": "ERROR",
+    #         "message": "Exceeded subscription limit!",
+    #     }
     try:
         unit_type  = UnitType.objects.get(id=payload.unit_type)
         unit_class  = UnitClass.objects.get(id=payload.unit_class)

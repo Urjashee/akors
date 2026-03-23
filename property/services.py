@@ -61,3 +61,9 @@ def get_unit_details(unit, forms, images):
             "forms": forms,
             "images": images,
         }
+
+def check_if_subscription(payload, user):
+    # check if user has active subscription in stripe
+    print("Payload:", payload)
+    print("User:", user)
+    return False

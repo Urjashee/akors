@@ -8,7 +8,7 @@ from stripe_integration.schemas import CreateCustomerSchema, ErrorSchema, Succes
     UpdateSubscriptionSchema, UpdatePaymentMethod
 from stripe_integration.services import create_customer, create_subscription, cancel_subscription, \
     get_subscription_details, get_upcoming_invoice, update_default_card, get_payment_method, get_all_invoice, \
-    create_session, update_web_hook, get_invoice_details, get_sub_details
+    create_session, update_web_hook, get_invoice_details, get_sub_details, has_active_subscription
 
 router = Router(tags=["stripe"])
 
@@ -166,8 +166,9 @@ def subscription_details_api(request):
             return 400, {"status": "ERROR", "message": "No subscription found"}
 
         subscription = get_subscription_details(user.stripe_subscription_id)
-        payment_method = get_payment_method(subscription.default_payment_method)
+        payment_method = get_payment_method(user.customer_id)
         invoices = get_all_invoice(user.customer_id)
+        active_subscription = has_active_subscription(user.customer_id)
         history = []
 
         for invoice in invoices.data:
@@ -176,7 +177,7 @@ def subscription_details_api(request):
 
         item = subscription["items"]["data"][0]
 
-        fetch_sub_details = get_sub_details(subscription, item, history, payment_method)
+        fetch_sub_details = get_sub_details(subscription, item, history, payment_method, active_subscription)
 
         return 200, {
             "status": "SUCCESS",
@@ -192,7 +193,7 @@ def subscription_details_api(request):
     "/payment-method/update",
     response={200: SuccessSchema, 400: ErrorSchema},
 )
-def subscription_details_api(request, payload: UpdatePaymentMethod):
+def payment_method_update(request, payload: UpdatePaymentMethod):
     try:
         with transaction.atomic():
             user = User.objects.filter(email=request.user.email).first()

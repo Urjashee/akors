@@ -136,10 +136,16 @@ def get_all_invoice(customer_id):
         return None
 
 
-def get_payment_method(payment_method_id):
+def get_payment_method(customer_id):
     try:
-        payment_method = stripe.PaymentMethod.retrieve(payment_method_id)
+        customer = stripe.Customer.retrieve(customer_id)
+        payment_method_id = customer.invoice_settings.default_payment_method
 
+        if not payment_method_id:
+            return None
+
+        payment_method = stripe.PaymentMethod.retrieve(payment_method_id)
+        # print("Method:", payment_method)
         return payment_method
 
     except stripe.StripeError:
@@ -184,16 +190,27 @@ def get_invoice_details(invoice):
     }
 
 
-def get_sub_details(subscription, item, history, payment_method):
+def get_sub_details(subscription, item, history, payment_method, active_subscription):
     return {
-            "subscription_id": subscription["id"],
-            "status": subscription["status"],
-            "plan_price": subscription["plan"]["amount"] / 100,
-            "billing_interval": subscription["plan"]["interval"],
-            "last_bill_amount": subscription["latest_invoice"]["amount_paid"] / 100,
-            "last_bill_date": subscription["latest_invoice"]["status_transitions"]["paid_at"],
-            "next_bill_date": item["current_period_end"],
-            "cancelled": subscription["canceled_at"] is not None,
-            "invoices": history,
-            "default_payment_method": payment_method.card,
-        }
+        "subscription_id": subscription["id"],
+        "status": subscription["status"],
+        "plan_price": subscription["plan"]["amount"] / 100,
+        "billing_interval": subscription["plan"]["interval"],
+        "last_bill_amount": subscription["latest_invoice"]["amount_paid"] / 100,
+        "last_bill_date": subscription["latest_invoice"]["status_transitions"]["paid_at"],
+        "next_bill_date": item["current_period_end"],
+        "cancelled": subscription["canceled_at"] is not None,
+        "invoices": history,
+        "default_payment_method": payment_method.card,
+        "active_subscription": active_subscription
+    }
+
+
+def has_active_subscription(customer_id):
+    subscriptions = stripe.Subscription.list(
+        customer=customer_id,
+        status="active",
+        limit=1
+    )
+
+    return len(subscriptions.data) > 0
