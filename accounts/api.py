@@ -620,7 +620,7 @@ def admin_user_list(request, filters: UserFilterSchema = Query(...)):
 
 
 @router.post(
-    "/admin/user-approve}",
+    "/admin/user-approve",
     auth=SuperAdminAuth(),
     response={200: SuccessSchema, 400: ErrorSchema, 403: ErrorSchema},
 )
@@ -636,7 +636,7 @@ def approve_user(request, user_id: int, payload: ApproveDenySchema):
     try:
         with transaction.atomic():
             user = User.objects.filter(id=user_id, role_id=2).first()
-            if payload.status == "approved":
+            if payload.status == "approve":
                 if not user:
                     return 400, {
                         "status": "ERROR",
@@ -661,7 +661,7 @@ def approve_user(request, user_id: int, payload: ApproveDenySchema):
                         "status": "ERROR",
                         "message": "Could not send email. Property manager approved.",
                     }
-            elif payload.status == "Deny":
+            elif payload.status == "deny":
                 user.is_approved = False
                 user.is_subscribed = False
                 user.is_active = False
