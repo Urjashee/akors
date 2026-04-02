@@ -964,6 +964,70 @@ def admin_user_list(request):
         }
 
 
+@router.patch(
+    "/property-manager/user-toggle/{user_id}",
+    auth=PropertyManagerAuth(),
+    response={200: SuccessSchema, 400: ErrorSchema, 403: ErrorSchema},
+)
+def approve_user(request, user_id: int):
+    try:
+        with transaction.atomic():
+
+            user = User.objects.filter(id=user_id, is_approved=True).first()
+            if not user:
+                return 400, {
+                    "status": "ERROR",
+                    "message": "No user found.",
+                }
+            if user.is_active:
+                user.is_active = False
+            else:
+                user.is_active = True
+            user.save(update_fields=["is_active"])
+
+            return 200, {
+                "status": "SUCCESS",
+                "message": "Successfully updated user status.",
+                "data": None
+            }
+
+    except Exception:
+        return 400, {
+            "status": "ERROR",
+            "message": "Could not fetch users.",
+        }
+
+
+@router.patch(
+    "/property-manager/delete-user/{user_id}",
+    auth=PropertyManagerAuth(),
+    response={200: SuccessSchema, 400: ErrorSchema, 403: ErrorSchema},
+)
+def approve_user(request, user_id: int):
+    try:
+        with transaction.atomic():
+            user = User.objects.filter(id=user_id, role_id=2).first()
+
+            user.is_approved = False
+            user.is_subscribed = False
+            user.is_active = False
+            user.is_staff = False
+            user.email_verified_at = None
+            user.save(update_fields=["is_approved", "is_subscribed", "is_active", "is_staff"])
+
+
+            return 200, {
+                "status": "SUCCESS",
+                "message": "Successfully deleted user.",
+                "data": None
+            }
+
+    except Exception:
+        return 400, {
+            "status": "ERROR",
+            "message": "Could not fetch users.",
+        }
+
 #  *************************** OPERATOR **************************************
 
 @router.get(
