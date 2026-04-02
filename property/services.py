@@ -66,4 +66,6 @@ def check_if_subscription(payload, user):
     # check if user has active subscription in stripe
     print("Payload:", payload)
     print("User:", user)
+    if user.property_id:
+        return True
     return False

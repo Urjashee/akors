@@ -539,10 +539,15 @@ def create_password(request, payload: CreatePasswordSchema):
 )
 def admin_user_list(request, filters: UserFilterSchema = Query(...)):
     try:
-        users = User.objects.select_related("role").all()
+        users = User.objects.select_related("role", "subscription").all()
+
+        pending_user_count = User.objects.filter(
+            email_verified_at__isnull=True,
+            is_approved=False,
+            role_id=2
+        ).count()
 
         if filters.status:
-
             if filters.status == "verified_operator":
                 users = users.filter(
                     email_verified_at__isnull=False,
@@ -564,24 +569,45 @@ def admin_user_list(request, filters: UserFilterSchema = Query(...)):
                 )
 
         users = users.annotate(
+            role_id_val=F("role__id"),
             role_name=F("role__name"),
-            subscription_name=F("subscription__name")
+            subscription_id_val=F("subscription__id"),
+            subscription_name=F("subscription__name"),
+            subscription_amount=F("subscription__amount"),
         )
+
+        user_list = []
+        for user in users:
+            user_list.append({
+                "id": user.id,
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "email_verified_at": user.email_verified_at,
+                "status": user.is_active,
+
+                "company_name": user.company_name,
+                "company_address": user.company_address,
+                "phone_number": user.phone_number,
+
+                "role": {
+                    "id": user.role_id_val,
+                    "name": user.role_name,
+                },
+                "subscription": {
+                    "id": user.subscription_id_val,
+                    "name": user.subscription_name,
+                    "amount": user.subscription_amount,
+                }
+            })
 
         return 200, {
             "status": "SUCCESS",
             "message": "Users fetched successfully.",
-            "data": list(users.values(
-                "id",
-                "email",
-                "first_name",
-                "last_name",
-                "email_verified_at",
-                "is_active",
-                "role_id",
-                "role__name",
-                "subscription__name"
-            ))
+            "data": {
+                "data": user_list,
+                "pending_users_count": pending_user_count,
+            }
         }
 
     except Exception:

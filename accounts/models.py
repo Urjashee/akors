@@ -10,7 +10,6 @@ class Title(models.Model):
     def __str__(self):
         return self.name
 
-
 class Role(models.Model):
     name = models.CharField(max_length=100, unique=True)
 
@@ -19,7 +18,6 @@ class Role(models.Model):
 
     def __str__(self):
         return self.name
-
 
 class Subscriptions(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -64,7 +62,6 @@ class UserManager(BaseUserManager):
         user.set_password(password)
         user.save(using=self._db)
         return user
-
 
 class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
