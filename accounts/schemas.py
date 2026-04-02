@@ -48,6 +48,10 @@ class ChangePasswordSchema(BaseModel):
 class EmailSchema(BaseModel):
     email: str
 
+class ApproveDenySchema(BaseModel):
+    user_id: str
+    status: str
+
 class LoginSchema(BaseModel):
     email: str
     password: str

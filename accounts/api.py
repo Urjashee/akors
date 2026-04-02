@@ -13,12 +13,14 @@ from ninja.errors import HttpError
 from .auth_roles_middleware import SuperAdminAuth, PropertyManagerAuth, OperatorAuth
 from .jwt import create_access_token, create_refresh_token
 from .schemas import SuccessSchema, ErrorSchema, RegisterSchema, VerifyEmailSchema, EmailSchema, LoginSchema, \
-    UserFilterSchema, CreatePasswordSchema, InvitedUsers, SetupAccount, EditPropertyManager, ChangePasswordSchema
+    UserFilterSchema, CreatePasswordSchema, InvitedUsers, SetupAccount, EditPropertyManager, ChangePasswordSchema, \
+    ApproveDenySchema
 from .models import User, PasswordResets, Role, Title, RefreshToken
 from .services import send_welcome_email, send_reset_email, operator_sign_up_email, create_password_email, \
-    invite_user_email, process_password_setup, property_manager_details, operator_details, get_user_from_refresh_token
+    invite_user_email, process_password_setup, property_manager_details, operator_details, get_user_from_refresh_token, \
+    user_denied
 from .constants import WELCOME_EMAIL, FORGOT_PASSWORD_EMAIL, OPERATOR_SIGN_UP_EMAIL, CREATE_PASSWORD_EMAIL, \
-    INVITE_EMAIL, PROPERTY_MANAGER, OPERATOR
+    INVITE_EMAIL, PROPERTY_MANAGER, OPERATOR, USER_DENIED
 
 router = Router(tags=["accounts"])
 
@@ -584,7 +586,7 @@ def admin_user_list(request, filters: UserFilterSchema = Query(...)):
                 "first_name": user.first_name,
                 "last_name": user.last_name,
                 "email_verified_at": user.email_verified_at,
-                "status": user.is_active,
+                "status": "Active" if user.is_active else "Inactive",
 
                 "company_name": user.company_name,
                 "company_address": user.company_address,
@@ -618,11 +620,11 @@ def admin_user_list(request, filters: UserFilterSchema = Query(...)):
 
 
 @router.post(
-    "/admin/user-approve/{user_id}",
+    "/admin/user-approve}",
     auth=SuperAdminAuth(),
     response={200: SuccessSchema, 400: ErrorSchema, 403: ErrorSchema},
 )
-def approve_user(request, user_id: int):
+def approve_user(request, user_id: int, payload: ApproveDenySchema):
     if request.user.role.name != "Super admin":
         return 403, {
             "status": "Unauthorized",
@@ -633,31 +635,60 @@ def approve_user(request, user_id: int):
 
     try:
         with transaction.atomic():
-
             user = User.objects.filter(id=user_id, role_id=2).first()
-            if not user:
+            if payload.status == "approved":
+                if not user:
+                    return 400, {
+                        "status": "ERROR",
+                        "message": "No user found.",
+                    }
+                user.is_approved = True
+                user.save(update_fields=["is_approved"])
+                password_resets = PasswordResets.objects.create(
+                    email=user.email,
+                    token=token,
+                    type=CREATE_PASSWORD_EMAIL,
+                    user=user
+                )
+                if not password_resets:
+                    return 400, {
+                        "status": "ERROR",
+                        "message": "Could not create email token. Please try again later.",
+                    }
+                email_sent = create_password_email(user, token, type=CREATE_PASSWORD_EMAIL)
+                if not email_sent == 1:
+                    return 400, {
+                        "status": "ERROR",
+                        "message": "Could not send email. Property manager approved.",
+                    }
+            elif payload.status == "Deny":
+                user.is_approved = False
+                user.is_subscribed = False
+                user.is_active = False
+                user.is_staff = False
+                user.email_verified_at = None
+                user.save(update_fields=["is_approved", "is_subscribed", "is_active", "is_staff"])
+                password_resets = PasswordResets.objects.create(
+                    email=user.email,
+                    token=token,
+                    type=USER_DENIED,
+                    user=user
+                )
+                if not password_resets:
+                    return 400, {
+                        "status": "ERROR",
+                        "message": "Could not create email token. Please try again later.",
+                    }
+                email_sent = user_denied(user, token, type=USER_DENIED)
+                if not email_sent == 1:
+                    return 400, {
+                        "status": "ERROR",
+                        "message": "Could not send email. Property manager approved.",
+                    }
+            else:
                 return 400, {
                     "status": "ERROR",
-                    "message": "No user found.",
-                }
-            user.is_approved = True
-            user.save(update_fields=["is_approved"])
-            password_resets = PasswordResets.objects.create(
-                email=user.email,
-                token=token,
-                type=CREATE_PASSWORD_EMAIL,
-                user=user
-            )
-            if not password_resets:
-                return 400, {
-                    "status": "ERROR",
-                    "message": "Could not create email token. Please try again later.",
-                }
-            email_sent = create_password_email(user, token, type=CREATE_PASSWORD_EMAIL)
-            if not email_sent == 1:
-                return 400, {
-                    "status": "ERROR",
-                    "message": "Could not send email. Property manager approved.",
+                    "message": "Unexpected status received.",
                 }
             return 200, {
                 "status": "SUCCESS",
@@ -887,6 +918,50 @@ def property_manager_setup_account(request, payload: SetupAccount):
 
     except Exception as e:
         return 400, {"status": "ERROR", "message": str(e)}
+
+
+@router.get(
+    "/property-manager/users",
+    auth=PropertyManagerAuth(),
+    response={200: SuccessSchema, 400: ErrorSchema, 403: ErrorSchema},
+)
+def admin_user_list(request):
+    try:
+        users = User.objects.filter(
+            property=request.user,
+            role_id=3
+        ).select_related("role", "subscription", "title")
+
+        user_list = []
+        for user in users:
+            user_list.append({
+                "id": user.id,
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "status": (
+                    "Invited"
+                    if user.email_verified_at is None
+                    else "Active" if user.is_active
+                    else "Inactive"
+                ),
+                "title": {
+                    "id": user.title.id,
+                    "name": user.title.name,
+                },
+            })
+
+        return 200, {
+            "status": "SUCCESS",
+            "message": "Users fetched successfully.",
+            "data": user_list
+        }
+
+    except Exception:
+        return 400, {
+            "status": "ERROR",
+            "message": "Could not fetch users.",
+        }
 
 
 #  *************************** OPERATOR **************************************
