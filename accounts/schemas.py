@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional, Any, Generic, TypeVar, Type
 
 from ninja import Schema
@@ -83,3 +84,66 @@ class EditPropertyManager(BaseModel):
     company_name: Optional[str] = None
     company_address: Optional[str] = None
     phone_number: Optional[str] = None
+
+
+# --- Admin user list schemas ---
+
+from typing import List  # noqa: E402
+
+
+class RoleSchema(Schema):
+    id: int
+    name: str
+
+
+class SubscriptionSchema(Schema):
+    id: Optional[int] = None
+    name: Optional[str] = None
+    amount: Optional[float] = None
+
+
+class UserAdminSchema(Schema):
+    id: int
+    email: str
+    first_name: str
+    last_name: str
+    email_verified_at: Optional[datetime] = None
+    status: str
+    company_name: Optional[str] = None
+    company_address: Optional[str] = None
+    phone_number: Optional[str] = None
+    role: RoleSchema
+    subscription: SubscriptionSchema
+
+
+class AdminUserListData(Schema):
+    pending_users_count: int
+    users: List[UserAdminSchema]
+    current_page: int
+    page_size: int
+    total: int
+    total_pages: int
+
+
+# --- Property manager user list schemas ---
+
+class TitleSchema(Schema):
+    id: int
+    name: str
+
+
+class PMUserSchema(Schema):
+    id: int
+    email: str
+    first_name: str
+    last_name: str
+    status: str
+    title: TitleSchema
+
+
+class PMUserListData(Schema):
+    users: List[PMUserSchema]
+    current_page: int
+    page_size: int
+    total: int
+    total_pages: int

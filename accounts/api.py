@@ -12,9 +12,10 @@ from ninja.errors import HttpError
 
 from .auth_roles_middleware import SuperAdminAuth, PropertyManagerAuth, OperatorAuth
 from .jwt import create_access_token, create_refresh_token
+from core.pagination import PaginationSchema, paginate_queryset
 from .schemas import SuccessSchema, ErrorSchema, RegisterSchema, VerifyEmailSchema, EmailSchema, LoginSchema, \
     UserFilterSchema, CreatePasswordSchema, InvitedUsers, SetupAccount, EditPropertyManager, ChangePasswordSchema, \
-    ApproveDenySchema
+    ApproveDenySchema, UserAdminSchema, AdminUserListData, PMUserSchema, PMUserListData
 from .models import User, PasswordResets, Role, Title, RefreshToken
 from .services import send_welcome_email, send_reset_email, operator_sign_up_email, create_password_email, \
     invite_user_email, process_password_setup, property_manager_details, operator_details, get_user_from_refresh_token, \
@@ -537,9 +538,9 @@ def create_password(request, payload: CreatePasswordSchema):
 @router.get(
     "/admin/users",
     auth=SuperAdminAuth(),
-    response={200: SuccessSchema, 400: ErrorSchema, 403: ErrorSchema},
+    response={200: SuccessSchema[AdminUserListData], 400: ErrorSchema, 403: ErrorSchema},
 )
-def admin_user_list(request, filters: UserFilterSchema = Query(...)):
+def admin_user_list(request, filters: UserFilterSchema = Query(...), pagination: PaginationSchema = Query(...),):
     try:
         users = User.objects.select_related("role", "subscription").all()
 
@@ -578,8 +579,10 @@ def admin_user_list(request, filters: UserFilterSchema = Query(...)):
             subscription_amount=F("subscription__amount"),
         )
 
+        page_data = paginate_queryset(users, pagination.current_page, pagination.page_size)
+
         user_list = []
-        for user in users:
+        for user in page_data["items"]:
             user_list.append({
                 "id": user.id,
                 "email": user.email,
@@ -587,11 +590,9 @@ def admin_user_list(request, filters: UserFilterSchema = Query(...)):
                 "last_name": user.last_name,
                 "email_verified_at": user.email_verified_at,
                 "status": "Active" if user.is_active else "Inactive",
-
                 "company_name": user.company_name,
                 "company_address": user.company_address,
                 "phone_number": user.phone_number,
-
                 "role": {
                     "id": user.role_id_val,
                     "name": user.role_name,
@@ -600,16 +601,20 @@ def admin_user_list(request, filters: UserFilterSchema = Query(...)):
                     "id": user.subscription_id_val,
                     "name": user.subscription_name,
                     "amount": user.subscription_amount,
-                }
+                },
             })
 
         return 200, {
             "status": "SUCCESS",
             "message": "Users fetched successfully.",
             "data": {
-                "user": user_list,
                 "pending_users_count": pending_user_count,
-            }
+                "users": user_list,
+                "current_page": page_data["current_page"],
+                "page_size": page_data["page_size"],
+                "total": page_data["total"],
+                "total_pages": page_data["total_pages"],
+            },
         }
 
     except Exception:
@@ -923,17 +928,19 @@ def property_manager_setup_account(request, payload: SetupAccount):
 @router.get(
     "/property-manager/users",
     auth=PropertyManagerAuth(),
-    response={200: SuccessSchema, 400: ErrorSchema, 403: ErrorSchema},
+    response={200: SuccessSchema[PMUserListData], 400: ErrorSchema, 403: ErrorSchema},
 )
-def admin_user_list(request):
+def property_manager_user_list(request, pagination: PaginationSchema = Query(...)):
     try:
         users = User.objects.filter(
             property=request.user,
             role_id=3
         ).select_related("role", "subscription", "title")
 
+        page_data = paginate_queryset(users, pagination.current_page, pagination.page_size)
+
         user_list = []
-        for user in users:
+        for user in page_data["items"]:
             user_list.append({
                 "id": user.id,
                 "email": user.email,
@@ -954,7 +961,13 @@ def admin_user_list(request):
         return 200, {
             "status": "SUCCESS",
             "message": "Users fetched successfully.",
-            "data": user_list
+            "data": {
+                "users": user_list,
+                "current_page": page_data["current_page"],
+                "page_size": page_data["page_size"],
+                "total": page_data["total"],
+                "total_pages": page_data["total_pages"],
+            },
         }
 
     except Exception:
