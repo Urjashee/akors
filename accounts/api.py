@@ -943,7 +943,7 @@ def admin_user_list(request):
                     "Invited"
                     if user.email_verified_at is None
                     else "Active" if user.is_active
-                    else "Inactive"
+                    else "Pending"
                 ),
                 "title": {
                     "id": user.title.id,
