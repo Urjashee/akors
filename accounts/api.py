@@ -607,7 +607,7 @@ def admin_user_list(request, filters: UserFilterSchema = Query(...)):
             "status": "SUCCESS",
             "message": "Users fetched successfully.",
             "data": {
-                "data": user_list,
+                "user": user_list,
                 "pending_users_count": pending_user_count,
             }
         }
