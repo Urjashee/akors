@@ -1,7 +1,7 @@
 from typing import Optional
 
 from django.core.files.storage import default_storage
-from ninja import Router, Form
+from ninja import Router, Form, Query
 from django.db import transaction
 from ninja import File
 from ninja.files import UploadedFile
@@ -11,7 +11,8 @@ from accounts.schemas import SuccessSchema, ErrorSchema
 from core import settings
 from forms.models import Forms
 from property.models import State
-from forms.schemas import AddProperty, UpdateStates, AddEditForms, DeleteForm
+from forms.schemas import AddProperty, UpdateStates, AddEditForms, DeleteForm, FormsListData
+from core.pagination import PaginationSchema, paginate_queryset
 
 router = Router(tags=["forms"])
 
@@ -130,14 +131,16 @@ def delete_form(request, payload: DeleteForm):
 @router.get(
     "/get/{state_id}",
     auth=SuperAdminAuth(),
-    response={200: SuccessSchema, 400: ErrorSchema, 403: ErrorSchema},
+    response={200: SuccessSchema[FormsListData], 400: ErrorSchema, 403: ErrorSchema},
 )
-def get_forms(request, state_id: int):
+def get_forms(request, state_id: int, pagination: PaginationSchema = Query(...)):
     try:
         forms = Forms.objects.filter(state_id=state_id)
 
+        page_data = paginate_queryset(forms, pagination.current_page, pagination.page_size)
+
         data = []
-        for form in forms:
+        for form in page_data["items"]:
             data.append({
                 "id": form.id,
                 "name": form.name,
@@ -148,7 +151,13 @@ def get_forms(request, state_id: int):
         return 200, {
             "status": "SUCCESS",
             "message": "Forms fetched successfully.",
-            "data": data,
+            "data": {
+                "forms": data,
+                "current_page": page_data["current_page"],
+                "page_size": page_data["page_size"],
+                "total": page_data["total"],
+                "total_pages": page_data["total_pages"],
+            },
         }
 
     except Exception as e:

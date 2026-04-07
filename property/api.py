@@ -1,4 +1,4 @@
-from ninja import Router, Form, File
+from ninja import Router, Form, File, Query
 from django.db import transaction
 from ninja.files import UploadedFile
 from django.db.models import Q
@@ -9,7 +9,8 @@ from accounts.schemas import SuccessSchema, ErrorSchema
 from accounts.services import operator_details, property_manager_details
 from property.models import State, PropertyManagement, Unit, UnitType, UnitClass, Images, UnitForm
 from property.schemas import AddProperty, AssignManager, PropertySchema, AddEditUnit, UploadUnitImage, UploadUnitForm, \
-    UnitSchema
+    UnitSchema, PropertyListData, UnitListData
+from core.pagination import PaginationSchema, paginate_queryset
 from accounts.constants import PROPERTY_MANAGER, SUPER_ADMIN, OPERATOR
 from property.services import update_property_forms, get_building_details, get_unit_details, check_if_subscription
 from forms.models import Forms
@@ -201,36 +202,22 @@ def add_edit_property(request, payload: AddProperty):
 
 @router.get(
     "/get",
-    response={200: SuccessSchema[list[PropertySchema]], 400: ErrorSchema},
+    response={200: SuccessSchema[PropertyListData], 400: ErrorSchema},
 )
-def get_property(request):
-    buildings = []
+def get_property(request, pagination: PaginationSchema = Query(...)):
+    buildings = PropertyManagement.objects.select_related("state")
+
     if request.user.role.id == PROPERTY_MANAGER:
-        buildings = (
-            PropertyManagement.objects
-            .select_related("state")
-            .filter(manager=request.user)
-        )
+        buildings = buildings.filter(manager=request.user)
+    elif request.user.role.id == OPERATOR:
+        buildings = buildings.filter(created_by=request.user)
 
-    if request.user.role.id == OPERATOR:
-        buildings = (
-            PropertyManagement.objects
-            .select_related("state")
-            .filter(created_by=request.user)
-        )
-
-    if request.user.role.id == SUPER_ADMIN:
-        buildings = (
-            PropertyManagement.objects
-            .select_related("state")
-        )
+    page_data = paginate_queryset(buildings, pagination.current_page, pagination.page_size)
 
     result = []
-
-    for building in buildings:
+    for building in page_data["items"]:
 
         unit_count = Unit.objects.filter(property=building).count()
-        print("unit_count", unit_count)
         state_forms = Forms.objects.filter(state=building.state).select_related("state")
 
         active_forms = set(
@@ -238,7 +225,6 @@ def get_property(request):
             .filter(property=building)
             .values_list("form_id", flat=True)
         )
-        print(active_forms)
 
         forms = []
 
@@ -260,7 +246,6 @@ def get_property(request):
                         "name": form.name,
                         "image": form.image.url if form.image else None,
                         "unit_type": form.unit_type.name,
-                        # "active": 1 if form.id in active_forms else 0
                     })
 
         fetch_building_details = get_building_details(building)
@@ -271,16 +256,22 @@ def get_property(request):
     return 200, {
         "status": "SUCCESS",
         "message": "Successfully fetched buildings.",
-        "data": result
+        "data": {
+            "properties": result,
+            "current_page": page_data["current_page"],
+            "page_size": page_data["page_size"],
+            "total": page_data["total"],
+            "total_pages": page_data["total_pages"],
+        },
     }
 
 
 @router.get(
     "/search",
     auth=None,
-    response={200: SuccessSchema[list[PropertySchema]], 400: ErrorSchema},
+    response={200: SuccessSchema[PropertyListData], 400: ErrorSchema},
 )
-def search_property(request, query: str = ""):
+def search_property(request, query: str = "", pagination: PaginationSchema = Query(...)):
     try:
         buildings = PropertyManagement.objects.select_related("state")
 
@@ -295,12 +286,12 @@ def search_property(request, query: str = ""):
                 Q(state__name__icontains=query)
             )
 
-        result = []
+        page_data = paginate_queryset(buildings, pagination.current_page, pagination.page_size)
 
-        for building in buildings:
+        result = []
+        for building in page_data["items"]:
 
             unit_count = Unit.objects.filter(property=building).count()
-
             state_forms = Forms.objects.filter(state=building.state)
 
             active_forms = set(
@@ -317,19 +308,23 @@ def search_property(request, query: str = ""):
                         "name": form.name,
                         "image": form.image.url if form.image else None,
                         "unit_type": form.unit_type.name,
-                        # "active": 1 if form.id in active_forms else 0
                     })
 
             data = get_building_details(building)
             data["forms"] = forms
             data["unit_count"] = unit_count
-
             result.append(data)
 
         return 200, {
             "status": "SUCCESS",
             "message": "Successfully fetched buildings.",
-            "data": result
+            "data": {
+                "properties": result,
+                "current_page": page_data["current_page"],
+                "page_size": page_data["page_size"],
+                "total": page_data["total"],
+                "total_pages": page_data["total_pages"],
+            },
         }
 
     except Exception as e:
@@ -530,43 +525,35 @@ def delete_unit_image(
 
 @router.get(
     "/units/get/{property_id}",
-    response={200: SuccessSchema[list[UnitSchema]], 400: ErrorSchema},
+    response={200: SuccessSchema[UnitListData], 400: ErrorSchema},
 )
-def get_units(request, property_id: int):
-    units = []
-    data = []
+def get_units(request, property_id: int, pagination: PaginationSchema = Query(...)):
     if request.user.role.id == OPERATOR:
         units = Unit.objects.filter(user=request.user, property=property_id)
-        if not units:
-            return 400, {
-                "status": "ERROR",
-                "message": "No units found.",
-            }
-
-    if request.user.role.id == PROPERTY_MANAGER:
+    else:
         units = Unit.objects.filter(property=property_id)
-        if not units:
-            return 400, {
-                "status": "ERROR",
-                "message": "No units found.",
-            }
 
-    for unit in units:
+    page_data = paginate_queryset(units, pagination.current_page, pagination.page_size)
+
+    data = []
+    for unit in page_data["items"]:
         forms = UnitForm.objects.filter(unit=unit.id)
         images = Images.objects.filter(unit=unit.id)
 
-        forms_count = len(forms)
-        images_count = len(images)
-
         fetch_unit_data = get_unit_details(unit, forms, images)
-        fetch_unit_data['forms_count'] = forms_count
-        fetch_unit_data['images_count'] = images_count
+        fetch_unit_data['forms_count'] = len(forms)
+        fetch_unit_data['images_count'] = len(images)
 
         data.append(fetch_unit_data)
 
-
     return 200, {
         "status": "SUCCESS",
-        "message": "Successfully fetched buildings.",
-        "data": data
+        "message": "Successfully fetched units.",
+        "data": {
+            "units": data,
+            "current_page": page_data["current_page"],
+            "page_size": page_data["page_size"],
+            "total": page_data["total"],
+            "total_pages": page_data["total_pages"],
+        },
     }

@@ -1,5 +1,6 @@
 from typing import Optional, Any, List
 from pydantic import BaseModel, EmailStr, Field
+from ninja import Schema
 
 class AddProperty(BaseModel):
     token: str
@@ -16,3 +17,18 @@ class AddEditForms(BaseModel):
 
 class DeleteForm(BaseModel):
     id: int
+
+
+class FormItemSchema(Schema):
+    id: int
+    name: str
+    state_id: int
+    image: str = None
+
+
+class FormsListData(Schema):
+    forms: List[FormItemSchema]
+    current_page: int
+    page_size: int
+    total: int
+    total_pages: int

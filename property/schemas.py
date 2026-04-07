@@ -76,6 +76,13 @@ class PropertySchema(Schema):
     forms: list[PropertyFormSchema]
     unit_count: int
 
+class PropertyListData(Schema):
+    properties: List[PropertySchema]
+    current_page: int
+    page_size: int
+    total: int
+    total_pages: int
+
 class AddEditUnit(BaseModel):
     id: Optional[int] = None
     state_registration: str
@@ -108,6 +115,18 @@ class UnitSchema(Schema):
     property: UnitPropertySchema | None
     forms: List[UnitFormSchema] | None
     images: List[UnitImageSchema] | None
+    forms_count: int | None = 0
+    images_count: int | None = 0
+
+
+class UnitListData(Schema):
+    units: List[UnitSchema]
+    current_page: int
+    page_size: int
+    total: int
+    total_pages: int
+
+
 
 
 
