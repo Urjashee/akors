@@ -867,7 +867,7 @@ def property_manager_invite_user(request, payload: InvitedUsers):
                     "status": "ERROR",
                     "message": "Could not create password reset token. Please try again later.",
                 }
-            email_sent = invite_user_email(user, token, type=INVITE_EMAIL)
+            email_sent = invite_user_email(user, token, title_data, email_type=INVITE_EMAIL)
             if not email_sent == 1:
                 return 400, {
                     "status": "ERROR",

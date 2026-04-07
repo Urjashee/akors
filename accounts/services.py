@@ -30,7 +30,7 @@ def send_welcome_email(user, token, type):
     return sent_count
 
 
-def invite_user_email(user, token, type):
+def invite_user_email(user, token, title_data, email_type):
     subject = "Welcome to Akors 🎉"
     from_email = settings.DEFAULT_FROM_EMAIL
     to = [user.email]
@@ -41,7 +41,8 @@ def invite_user_email(user, token, type):
             "user": user,
             "token": token,
             "site": os.getenv("SITE_NAME"),
-            "type": type
+            "type": email_type,
+            "title_data": title_data,
         }
     )
 
