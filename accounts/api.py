@@ -629,7 +629,7 @@ def admin_user_list(request, filters: UserFilterSchema = Query(...), pagination:
     auth=SuperAdminAuth(),
     response={200: SuccessSchema, 400: ErrorSchema, 403: ErrorSchema},
 )
-def approve_user(request, user_id: int, payload: ApproveDenySchema):
+def approve_user(request, payload: ApproveDenySchema):
     if request.user.role.name != "Super admin":
         return 403, {
             "status": "Unauthorized",
@@ -640,7 +640,7 @@ def approve_user(request, user_id: int, payload: ApproveDenySchema):
 
     try:
         with transaction.atomic():
-            user = User.objects.filter(id=user_id, role_id=2).first()
+            user = User.objects.filter(id=payload.user_id, role_id=2).first()
             if payload.status == "approve":
                 if not user:
                     return 400, {

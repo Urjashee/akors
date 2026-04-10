@@ -50,7 +50,7 @@ class EmailSchema(BaseModel):
     email: str
 
 class ApproveDenySchema(BaseModel):
-    user_id: str
+    user_id: int
     status: str
 
 class LoginSchema(BaseModel):
