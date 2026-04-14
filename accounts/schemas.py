@@ -44,6 +44,7 @@ class VerifyEmailSchema(BaseModel):
     password: Optional[str] = None
 
 class ChangePasswordSchema(BaseModel):
+    old_password: str
     password: str
 
 class EmailSchema(BaseModel):

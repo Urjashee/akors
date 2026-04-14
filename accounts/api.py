@@ -1095,6 +1095,12 @@ def change_request(request, payload: ChangePasswordSchema):
                     "message": "No user found.",
                 }
 
+            if not user.check_password(payload.old_password):
+                return 400, {
+                    "status": "ERROR",
+                    "message": "Your current password in incorrect",
+                }
+
             if user.check_password(payload.password):
                 return 400, {
                     "status": "ERROR",
