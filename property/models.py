@@ -79,7 +79,6 @@ class Unit(models.Model):
     class Meta:
         db_table = "units"
 
-
 class Images(models.Model):
     url = models.ImageField(upload_to="image/", null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -91,7 +90,6 @@ class Images(models.Model):
 
     class Meta:
         db_table = "images"
-
 
 class UnitForm(models.Model):
     url = models.ImageField(upload_to="image/", null=True, blank=True)

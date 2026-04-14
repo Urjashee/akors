@@ -97,7 +97,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     class Meta:
         db_table = "users"
 
-
 class PasswordResets(models.Model):
     email = models.EmailField()
     token = models.CharField(max_length=100)
@@ -110,7 +109,6 @@ class PasswordResets(models.Model):
 
     class Meta:
         db_table = "password_resets"
-
 
 class RefreshToken(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
