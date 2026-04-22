@@ -13,7 +13,7 @@ pipelines:
                 SERVER: $SERVER
                 COMMAND: >
                   cd /var/www/akors-backend &&
-                  sudo chown -R $USER:$USER . &&
+                  sudo chown -R ubuntu:ubuntu . &&
                   git pull https://uj_simpalm:$GIT_PASSWORD@bitbucket.org/Simpalm/akors-backend.git staging &&
                   sudo chown -R www-data:www-data . &&
                   uv run manage.py migrate --noinput &&
