@@ -18,4 +18,4 @@ pipelines:
                   sudo chown -R www-data:www-data . &&
                   sudo systemctl restart gunicorn-akors &&
                   sudo service apache2 restart &&
-                  uv run manage.py migrate
+                  /home/ubuntu/.local/bin/uv run manage.py migrate
