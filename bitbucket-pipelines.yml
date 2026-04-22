@@ -1,0 +1,22 @@
+image: atlassian/default-image:4
+
+pipelines:
+  branches:
+    staging:
+      - step:
+          name: Deploy to Staging
+          deployment: staging
+          script:
+            - pipe: atlassian/ssh-run:0.4.1
+              variables:
+                SSH_USER: $SSH_USER
+                SERVER: $SERVER
+                SSH_KEY: $SSH_PRIVATE_KEY
+                COMMAND: >
+                  cd /var/www/akors-backend &&
+                  sudo chown -R $USER:$USER . &&
+                  git pull https://uj_simpalm:$GIT_PASSWORD@bitbucket.org/Simpalm/akors-backend.git staging &&
+                  sudo chown -R www-data:www-data . &&
+                  uv run manage.py migrate --noinput &&
+                  sudo systemctl restart gunicorn-akors &&
+                  sudo service apache2 restart
