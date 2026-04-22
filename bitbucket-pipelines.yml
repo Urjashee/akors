@@ -11,7 +11,6 @@ pipelines:
               variables:
                 SSH_USER: $SSH_USER
                 SERVER: $SERVER
-                SSH_KEY: $SSH_PRIVATE_KEY
                 COMMAND: >
                   cd /var/www/akors-backend &&
                   sudo chown -R $USER:$USER . &&
