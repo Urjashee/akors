@@ -16,6 +16,6 @@ pipelines:
                   sudo chown -R ubuntu:ubuntu . &&
                   git pull https://uj_simpalm:$GIT_PASSWORD@bitbucket.org/Simpalm/akors-backend.git staging &&
                   sudo chown -R www-data:www-data . &&
-                  uv run manage.py migrate --noinput &&
                   sudo systemctl restart gunicorn-akors &&
-                  sudo service apache2 restart
+                  sudo service apache2 restart &&
+                  uv run manage.py migrate
