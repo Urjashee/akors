@@ -201,7 +201,7 @@ def get_sub_details(subscription, item, history, payment_method, active_subscrip
         "next_bill_date": item["current_period_end"],
         "cancelled": subscription["canceled_at"] is not None,
         "invoices": history,
-        "default_payment_method": payment_method.card,
+        "default_payment_method": payment_method.card if payment_method else None,
         "active_subscription": active_subscription
     }
 

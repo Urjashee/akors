@@ -589,7 +589,11 @@ def admin_user_list(request, filters: UserFilterSchema = Query(...), pagination:
                 "first_name": user.first_name,
                 "last_name": user.last_name,
                 "email_verified_at": user.email_verified_at,
-                "status": "Active" if user.is_active else "Inactive",
+                "status": (
+                    "Pending"
+                    if user.role_id_val == 2 and user.email_verified_at is None and not user.is_approved
+                    else "Active" if user.is_active else "Inactive"
+                ),
                 "company_name": user.company_name,
                 "company_address": user.company_address,
                 "phone_number": user.phone_number,
