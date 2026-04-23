@@ -87,3 +87,8 @@ Requires a `.env` file with:
 - `STRIPE_*` (API keys + webhook secret)
 - `SITE_NAME` (used in email links)
 - `ADMIN_EMAIL`, `PASSWORD` (seeded superuser)
+
+
+## Repository 
+
+- push to both origins
