@@ -11,7 +11,7 @@ from accounts.schemas import SuccessSchema, ErrorSchema
 from core import settings
 from forms.models import Forms
 from property.models import State
-from forms.schemas import AddProperty, UpdateStates, AddEditForms, DeleteForm, FormsListData
+from forms.schemas import AddProperty, UpdateStates, AddEditForms, DeleteForm, DeleteState, FormsListData
 from core.pagination import PaginationSchema, paginate_queryset
 
 router = Router(tags=["forms"])
@@ -124,6 +124,36 @@ def delete_form(request, payload: DeleteForm):
     return 200, {
         "status": "SUCCESS",
         "message": "Successfully deleted form.",
+        "data": None
+    }
+
+
+@router.post(
+    "/delete-state",
+    auth=SuperAdminAuth(),
+    response={200: SuccessSchema, 400: ErrorSchema, 403: ErrorSchema},
+)
+def delete_state(request, payload: DeleteState):
+    try:
+        with transaction.atomic():
+            state = State.objects.get(id=payload.id)
+            forms = Forms.objects.filter(state=state)
+            for form in forms:
+                if form.image:
+                    form.image.delete(save=False)
+            forms.delete()
+            state.is_active = False
+            state.save(update_fields=["is_active"])
+
+    except Exception as e:
+        return 400, {
+            "status": "ERROR",
+            "message": str(e),
+        }
+
+    return 200, {
+        "status": "SUCCESS",
+        "message": "Successfully deactivated state and deleted associated forms.",
         "data": None
     }
 

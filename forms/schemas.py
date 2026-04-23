@@ -19,6 +19,10 @@ class DeleteForm(BaseModel):
     id: int
 
 
+class DeleteState(BaseModel):
+    id: int
+
+
 class FormItemSchema(Schema):
     id: int
     name: str
