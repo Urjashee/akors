@@ -30,6 +30,21 @@ class PropertyManagerAuth(HttpBearer):
         request.user = user
         return user
 
+class SuperAdminOrPropertyManagerAuth(HttpBearer):
+    def authenticate(self, request, token):
+        user = get_user_from_token(token)
+
+        if not user:
+            raise HttpError(401, "Not a valid user!")
+
+        print(user.role.name)
+
+        if user.role.name not in ("Super admin", "Property manager"):
+            raise HttpError(403, "Not a property manager user!")
+
+        request.user = user
+        return user
+
 
 class OperatorAuth(HttpBearer):
     def authenticate(self, request, token):

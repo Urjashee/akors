@@ -15,13 +15,13 @@ from .jwt import create_access_token, create_refresh_token
 from core.pagination import PaginationSchema, paginate_queryset
 from .schemas import SuccessSchema, ErrorSchema, RegisterSchema, VerifyEmailSchema, EmailSchema, LoginSchema, \
     UserFilterSchema, CreatePasswordSchema, InvitedUsers, SetupAccount, EditPropertyManager, ChangePasswordSchema, \
-    ApproveDenySchema, UserAdminSchema, AdminUserListData, PMUserSchema, PMUserListData
+    ApproveDenySchema, UserAdminSchema, AdminUserListData, PMUserSchema, PMUserListData, EditSuperAdmin
 from .models import User, PasswordResets, Role, Title, RefreshToken
 from .services import send_welcome_email, send_reset_email, operator_sign_up_email, create_password_email, \
     invite_user_email, process_password_setup, property_manager_details, operator_details, get_user_from_refresh_token, \
-    user_denied
+    user_denied, admin_details
 from .constants import WELCOME_EMAIL, FORGOT_PASSWORD_EMAIL, OPERATOR_SIGN_UP_EMAIL, CREATE_PASSWORD_EMAIL, \
-    INVITE_EMAIL, PROPERTY_MANAGER, OPERATOR, USER_DENIED
+    INVITE_EMAIL, PROPERTY_MANAGER, OPERATOR, USER_DENIED, SUPER_ADMIN
 
 router = Router(tags=["accounts"])
 
@@ -534,6 +534,80 @@ def create_password(request, payload: CreatePasswordSchema):
 
 
 #  *************************** ADMIN **************************************
+
+@router.get(
+    "/admin/profile",
+    auth=SuperAdminAuth(),
+    response={200: SuccessSchema, 400: ErrorSchema, 403: ErrorSchema},
+)
+def admin_get_profile(request):
+    try:
+        users = User.objects.filter(email=request.user.email).first()
+        if not users:
+            return 400, {
+                "status": "ERROR",
+                "message": "No user found.",
+            }
+
+        if users.role.id is not SUPER_ADMIN:
+            return 403, {
+                "status": "ERROR",
+                "message": "Permission denied. Admin only.",
+            }
+
+        fetch_super_admin = admin_details(users)
+
+        return 200, {
+            "status": "SUCCESS",
+            "message": "Users fetched successfully.",
+            "data": fetch_super_admin
+        }
+
+    except Exception:
+        return 400, {
+            "status": "ERROR",
+            "message": "Could not fetch users.",
+        }
+
+
+@router.post(
+    "/admin/profile/edit",
+    auth=SuperAdminAuth(),
+    response={200: SuccessSchema, 400: ErrorSchema, 403: ErrorSchema},
+)
+def admin_edit_profile(request, payload: EditSuperAdmin):
+    try:
+        with transaction.atomic():
+            user = User.objects.filter(email=request.user.email).first()
+            print(user)
+            if not user:
+                return 400, {
+                    "status": "ERROR",
+                    "message": "No user found.",
+                }
+
+            if user.role.id is not SUPER_ADMIN:
+                return 403, {
+                    "status": "ERROR",
+                    "message": "Permission denied. Admin only.",
+                }
+
+            user.first_name = payload.first_name
+            user.last_name = payload.last_name
+            user.save(update_fields=["first_name", "last_name"])
+
+    except Exception as e:
+        return 400, {
+            "status": "ERROR",
+            "message": f"Could not fetch users. {str(e)}",
+        }
+
+    return 200, {
+        "status": "SUCCESS",
+        "message": "Successfully updated super admin.",
+        "data": None
+    }
+
 
 @router.get(
     "/admin/users",
