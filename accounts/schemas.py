@@ -77,6 +77,12 @@ class SetupAccount(BaseModel):
     qei_number: str
     password: str
 
+class EditSuperAdmin(BaseModel):
+
+    first_name: str
+    last_name: str
+
+
 class EditPropertyManager(BaseModel):
 
     first_name: str

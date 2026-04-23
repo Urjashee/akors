@@ -181,6 +181,18 @@ def process_password_setup(token, password, qei_number=None):
     return user, None
 
 
+def admin_details(users):
+    return {
+        "id": users.id,
+        "email": users.email,
+        "first_name": users.first_name,
+        "last_name": users.last_name,
+        "role": {
+            "id": users.role_id,
+            "name": users.role.name,
+        }
+    }
+
 def property_manager_details(users):
     return {
         "id": users.id,
