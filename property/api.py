@@ -4,6 +4,7 @@ from ninja.files import UploadedFile
 from django.db.models import Q
 
 from accounts.auth_roles_middleware import OperatorAuth, SuperAdminAuth
+from accounts.auth import get_user_from_token
 from accounts.models import User
 from accounts.schemas import SuccessSchema, ErrorSchema
 from accounts.services import operator_details, property_manager_details
@@ -62,6 +63,7 @@ def assign_manager(request, payload: AssignManager):
         "data": None
     }
 
+
 @router.get(
     "/get-user-details/{user_id}",
     auth=SuperAdminAuth(),
@@ -104,7 +106,6 @@ def get_user_details(request, user_id: int):
         fetch_building_details["unit_count"] = unit_count
         buildings.append(fetch_building_details)
 
-
     return 200, {
         "status": "SUCCESS",
         "message": "Successfully fetch user details.",
@@ -114,7 +115,6 @@ def get_user_details(request, user_id: int):
             "payment_history": history,
         }
     }
-
 
 
 #  *************************** PROPERT MANAGER **************************************
@@ -334,6 +334,94 @@ def search_property(request, query: str = "", pagination: PaginationSchema = Que
         }
 
 
+@router.get(
+    "/search-building",
+    auth=None,
+    response={200: SuccessSchema[PropertyListData], 400: ErrorSchema},
+)
+def search_building(request, query: str = "", pagination: PaginationSchema = Query(...)):
+    try:
+        auth_header = request.headers.get("Authorization", "")
+        token = auth_header.replace("Bearer ", "").strip() if auth_header.startswith("Bearer ") else None
+        current_user = get_user_from_token(token) if token else None
+        is_authenticated = current_user is not None
+
+        buildings = PropertyManagement.objects.select_related("state")
+
+        if is_authenticated:
+            if current_user.role.id == PROPERTY_MANAGER:
+                buildings = buildings.filter(manager=current_user)
+            elif current_user.role.id == OPERATOR:
+                buildings = buildings.filter(created_by=current_user)
+
+        if not is_authenticated and (not query or not query.strip()):
+            return 400, {"status": "ERROR", "message": "Query cannot be empty."}
+
+        if query and query.strip():
+            buildings = buildings.filter(
+                Q(name__icontains=query) |
+                Q(property_management_company__icontains=query) |
+                Q(address_line_1__icontains=query) |
+                Q(address_line_2__icontains=query) |
+                Q(city__icontains=query) |
+                Q(zipcode__icontains=query) |
+                Q(state__name__icontains=query)
+            )
+
+        page_data = paginate_queryset(buildings, pagination.current_page, pagination.page_size)
+
+        result = []
+        for building in page_data["items"]:
+            unit_count = Unit.objects.filter(property=building).count()
+            state_forms = Forms.objects.filter(state=building.state).select_related("state")
+            active_forms = set(
+                PropertyForms.objects.filter(property=building).values_list("form_id", flat=True)
+            )
+            forms = []
+
+            if is_authenticated and current_user.role.id in [PROPERTY_MANAGER, SUPER_ADMIN]:
+                for form in state_forms:
+                    forms.append({
+                        "id": form.id,
+                        "name": form.name,
+                        "image": form.image.url if form.image else None,
+                        "unit_type": form.unit_type.name,
+                        "active": 1 if form.id in active_forms else 0,
+                    })
+            else:
+                for form in state_forms:
+                    if form.id in active_forms:
+                        forms.append({
+                            "id": form.id,
+                            "name": form.name,
+                            "image": form.image.url if form.image else None,
+                            "unit_type": form.unit_type.name,
+                        })
+
+            fetch_building_details = get_building_details(building)
+            fetch_building_details["forms"] = forms
+            fetch_building_details["unit_count"] = unit_count
+            result.append(fetch_building_details)
+
+        return 200, {
+            "status": "SUCCESS",
+            "message": "Successfully fetched buildings.",
+            "data": {
+                "properties": result,
+                "current_page": page_data["current_page"],
+                "page_size": page_data["page_size"],
+                "total": page_data["total"],
+                "total_pages": page_data["total_pages"],
+            },
+        }
+
+    except Exception as e:
+        return 400, {
+            "status": "ERROR",
+            "message": str(e),
+        }
+
+
 @router.post(
     "/unit/add-edit",
     response={200: SuccessSchema, 400: ErrorSchema, 403: ErrorSchema},
@@ -346,8 +434,8 @@ def add_edit_unit(request, payload: AddEditUnit = Form(...), certificate: Upload
     #         "message": "Exceeded subscription limit!",
     #     }
     try:
-        unit_type  = UnitType.objects.get(id=payload.unit_type)
-        unit_class  = UnitClass.objects.get(id=payload.unit_class)
+        unit_type = UnitType.objects.get(id=payload.unit_type)
+        unit_class = UnitClass.objects.get(id=payload.unit_class)
         property_management = PropertyManagement.objects.get(id=payload.property)
         with transaction.atomic():
             if payload.id:
@@ -371,11 +459,11 @@ def add_edit_unit(request, payload: AddEditUnit = Form(...), certificate: Upload
                         "message": "Can't add building details",
                     }
                 unit = Unit.objects.create(
-                    nickname = payload.nickname,
-                    state_registration = payload.state_registration,
-                    unit_type = unit_type,
-                    unit_class = unit_class,
-                    user = request.user,
+                    nickname=payload.nickname,
+                    state_registration=payload.state_registration,
+                    unit_type=unit_type,
+                    unit_class=unit_class,
+                    user=request.user,
                     property=property_management,
                 )
                 if not unit:
@@ -402,9 +490,9 @@ def add_edit_unit(request, payload: AddEditUnit = Form(...), certificate: Upload
     response={200: SuccessSchema, 400: ErrorSchema},
 )
 def add_unit_image(
-    request,
-    payload: UploadUnitImage = Form(...),
-    image: UploadedFile = File(...)
+        request,
+        payload: UploadUnitImage = Form(...),
+        image: UploadedFile = File(...)
 ):
     try:
         unit = Unit.objects.get(id=payload.unit_id)
@@ -438,9 +526,9 @@ def add_unit_image(
     response={200: SuccessSchema, 400: ErrorSchema},
 )
 def add_unit_form(
-    request,
-    payload: UploadUnitForm = Form(...),
-    image: UploadedFile = File(...)
+        request,
+        payload: UploadUnitForm = Form(...),
+        image: UploadedFile = File(...)
 ):
     try:
         unit = Unit.objects.get(id=payload.unit_id)
@@ -476,7 +564,7 @@ def add_unit_form(
     response={200: SuccessSchema, 400: ErrorSchema},
 )
 def delete_unit_form(
-    request, unit_form_id: int,
+        request, unit_form_id: int,
 ):
     try:
         unit_form = UnitForm.objects.get(id=unit_form_id)
@@ -502,7 +590,7 @@ def delete_unit_form(
     response={200: SuccessSchema, 400: ErrorSchema},
 )
 def delete_unit_image(
-    request, unit_form_id: int,
+        request, unit_form_id: int,
 ):
     try:
         unit_image = Images.objects.get(id=unit_form_id)
