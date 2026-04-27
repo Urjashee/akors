@@ -1,9 +1,10 @@
+from typing import List
 from ninja import Router, Form, File, Query
 from django.db import transaction
 from ninja.files import UploadedFile
 from django.db.models import Q
 
-from accounts.auth_roles_middleware import OperatorAuth, SuperAdminAuth
+from accounts.auth_roles_middleware import OperatorAuth, SuperAdminAuth, SuperAdminOrPropertyManagerAuth
 from accounts.auth import get_user_from_token
 from accounts.models import User
 from accounts.schemas import SuccessSchema, ErrorSchema
@@ -492,26 +493,32 @@ def add_edit_unit(request, payload: AddEditUnit = Form(...), certificate: Upload
 def add_unit_image(
         request,
         payload: UploadUnitImage = Form(...),
-        image: UploadedFile = File(...)
+        images: List[UploadedFile] = File(...)
 ):
     try:
+        if len(images) > 5:
+            return 400, {"status": "ERROR", "message": "Cannot upload more than 5 images at a time."}
+
         unit = Unit.objects.get(id=payload.unit_id)
 
         with transaction.atomic():
-            img = Images.objects.create(
-                user=request.user,
-                unit=unit,
-                property=unit.property,
-                url=image
-            )
+            created = [
+                Images.objects.create(
+                    user=request.user,
+                    unit=unit,
+                    property=unit.property,
+                    url=image
+                )
+                for image in images
+            ]
 
         return 200, {
             "status": "SUCCESS",
             "message": "Successfully added image.",
-            "data": {
-                "image_id": img.id,
-                "image_url": img.url.url if img.url else None
-            }
+            "data": [
+                {"image_id": img.id, "image_url": img.url.url if img.url else None}
+                for img in created
+            ]
         }
 
     except Unit.DoesNotExist:
@@ -587,6 +594,7 @@ def delete_unit_form(
 
 @router.delete(
     "/unit/delete-image/{unit_form_id}",
+    auth=SuperAdminOrPropertyManagerAuth(),
     response={200: SuccessSchema, 400: ErrorSchema},
 )
 def delete_unit_image(
@@ -616,10 +624,11 @@ def delete_unit_image(
     response={200: SuccessSchema[UnitListData], 400: ErrorSchema},
 )
 def get_units(request, property_id: int, pagination: PaginationSchema = Query(...)):
-    if request.user.role.id == OPERATOR:
-        units = Unit.objects.filter(user=request.user, property=property_id)
-    else:
-        units = Unit.objects.filter(property=property_id)
+    # print(property_id)
+    # if request.user.role.id == OPERATOR:
+    #     units = Unit.objects.filter(user=request.user.id, property=property_id)
+    # else:
+    units = Unit.objects.filter(property=property_id)
 
     page_data = paginate_queryset(units, pagination.current_page, pagination.page_size)
 
