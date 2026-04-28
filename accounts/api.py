@@ -1171,10 +1171,10 @@ def property_manager_edit_profile(request, payload: EditPropertyManager):
                     "message": "No user found.",
                 }
 
-            if user.role.id is not PROPERTY_MANAGER:
+            if user.role.id is not OPERATOR:
                 return 403, {
                     "status": "ERROR",
-                    "message": "Permission denied. Property manager only.",
+                    "message": "Permission denied. Operators only.",
                 }
 
             user.first_name = payload.first_name
