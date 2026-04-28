@@ -346,7 +346,7 @@ def search_building(request, query: str = "", pagination: PaginationSchema = Que
         current_user = get_user_from_token(token) if token else None
         is_authenticated = current_user is not None
 
-        buildings = PropertyManagement.objects.select_related("state")
+        buildings = PropertyManagement.objects.select_related("state", "manager")
 
         if is_authenticated:
             if current_user.role.id == PROPERTY_MANAGER:

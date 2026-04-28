@@ -31,6 +31,7 @@ def update_property_forms(property_management, payload):
 
 
 def get_building_details(building):
+    manager = building.manager
     return {
             "id": building.id,
             "name": building.name,
@@ -44,6 +45,12 @@ def get_building_details(building):
                 "id": building.state.id,
                 "name": building.state.name
             },
+            "manager": {
+                "id": manager.id,
+                "first_name": manager.first_name,
+                "last_name": manager.last_name,
+                "email": manager.email,
+            } if manager else None,
             # "forms": forms
         }
 
