@@ -1,5 +1,6 @@
 from typing import List
 from ninja import Router, Form, File, Query
+from ninja.errors import HttpError
 from django.db import transaction
 from ninja.files import UploadedFile
 from django.db.models import Q
@@ -414,6 +415,9 @@ def search_building(request, query: str = "", pagination: PaginationSchema = Que
                 "total_pages": page_data["total_pages"],
             },
         }
+
+    except HttpError:
+        raise
 
     except Exception as e:
         return 400, {
