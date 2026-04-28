@@ -15,7 +15,8 @@ from .jwt import create_access_token, create_refresh_token
 from core.pagination import PaginationSchema, paginate_queryset
 from .schemas import SuccessSchema, ErrorSchema, RegisterSchema, VerifyEmailSchema, EmailSchema, LoginSchema, \
     UserFilterSchema, CreatePasswordSchema, InvitedUsers, SetupAccount, EditPropertyManager, ChangePasswordSchema, \
-    ApproveDenySchema, UserAdminSchema, AdminUserListData, PMUserSchema, PMUserListData, EditSuperAdmin
+    ApproveDenySchema, UserAdminSchema, AdminUserListData, PMUserSchema, PMUserListData, EditSuperAdmin, \
+    UnauthorizedSchema
 from .models import User, PasswordResets, Role, Title, RefreshToken
 from .services import send_welcome_email, send_reset_email, operator_sign_up_email, create_password_email, \
     invite_user_email, process_password_setup, property_manager_details, operator_details, get_user_from_refresh_token, \
@@ -407,7 +408,7 @@ def reset_password_request(request, payload: VerifyEmailSchema):
 @router.post(
     "/login",
     auth=None,
-    response={200: SuccessSchema, 400: ErrorSchema},
+    response={200: SuccessSchema, 400: ErrorSchema, 401: UnauthorizedSchema},
 )
 def login(request, payload: LoginSchema):
     try:
@@ -415,9 +416,9 @@ def login(request, payload: LoginSchema):
 
             user = User.objects.filter(email=payload.email, is_active=True).first()
             if not user:
-                return 400, {
-                    "status": "ERROR",
-                    "message": "No user found.",
+                return 401, {
+                    "status": "Unauthorized",
+                    "message": "Your account is inactive.",
                 }
             if not user.check_password(payload.password):
                 return 400, {

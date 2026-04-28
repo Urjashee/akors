@@ -18,6 +18,10 @@ class ErrorSchema(BaseModel):
     status: str
     message: str
 
+class UnauthorizedSchema(BaseModel):
+    status: str
+    message: str
+
 class RegisterSchema(BaseModel):
     email: str
     password: Optional[str] = None
