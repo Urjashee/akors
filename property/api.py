@@ -340,12 +340,12 @@ def search_property(request, query: str = "", pagination: PaginationSchema = Que
     response={200: SuccessSchema[PropertyListData], 400: ErrorSchema},
 )
 def search_building(request, query: str = "", pagination: PaginationSchema = Query(...)):
-    try:
-        auth_header = request.headers.get("Authorization", "")
-        token = auth_header.replace("Bearer ", "").strip() if auth_header.startswith("Bearer ") else None
-        current_user = get_user_from_token(token) if token else None
-        is_authenticated = current_user is not None
+    auth_header = request.headers.get("Authorization", "")
+    token = auth_header.replace("Bearer ", "").strip() if auth_header.startswith("Bearer ") else None
+    current_user = get_user_from_token(token) if token else None
+    is_authenticated = current_user is not None
 
+    try:
         buildings = PropertyManagement.objects.select_related("state", "manager")
 
         if is_authenticated:
