@@ -62,6 +62,11 @@ class PropertyFormSchema(Schema):
     unit_type: str | None = None
     active: Optional[int] = None
 
+class ManagerSchema(Schema):
+    id: int
+    first_name: str
+    last_name: str
+    email: str
 
 class PropertySchema(Schema):
     id: int
@@ -71,8 +76,9 @@ class PropertySchema(Schema):
     city: str
     zipcode: str
     property_management_company: str
-    state_registration: str
+    # state_registration: str
     state: StateSchema
+    manager: Optional[ManagerSchema] = None
     forms: list[PropertyFormSchema]
     unit_count: int
 

@@ -40,7 +40,7 @@ def get_building_details(building):
             "city": building.city,
             "zipcode": building.zipcode,
             "property_management_company": building.property_management_company,
-            "state_registration": building.state_registration,
+            # "state_registration": building.state_registration,
             "state": {
                 "id": building.state.id,
                 "name": building.state.name
