@@ -143,8 +143,7 @@ def add_edit_property(request, payload: AddProperty):
                 property_management.city = payload.city
                 property_management.zipcode = payload.zipcode
                 property_management.state = state
-                if request.user.role.id == OPERATOR:
-                    property_management.state_registration = payload.state_registration
+
                 if request.user.role.id == SUPER_ADMIN:
                     user = User.objects.get(id=payload.manager_id)
                     if not user:
@@ -157,7 +156,7 @@ def add_edit_property(request, payload: AddProperty):
                             "status": "ERROR",
                             "message": "Assigned user is not a property manager",
                         }
-                    property_management.state_registration = payload.state_registration
+                    # property_management.state_registration = payload.state_registration
                     property_management.manager_id = payload.manager_id
                 property_management.save()
                 if request.user.role.id == PROPERTY_MANAGER:
@@ -173,7 +172,7 @@ def add_edit_property(request, payload: AddProperty):
 
                 property_management = PropertyManagement.objects.create(
                     name=payload.name,
-                    state_registration=payload.state_registration,
+                    # state_registration=payload.state_registration,
                     property_management_company=payload.property_management_company,
                     address_line_1=payload.address_line_1,
                     address_line_2=payload.address_line_2,
