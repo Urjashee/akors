@@ -1155,6 +1155,43 @@ def operator_get_profile(request):
             "message": "Could not fetch users.",
         }
 
+@router.post(
+    "/operator/profile/edit",
+    auth=OperatorAuth(),
+    response={200: SuccessSchema, 400: ErrorSchema, 403: ErrorSchema},
+)
+def property_manager_edit_profile(request, payload: EditPropertyManager):
+    try:
+        with transaction.atomic():
+            user = User.objects.filter(email=request.user.email).first()
+            print(user)
+            if not user:
+                return 400, {
+                    "status": "ERROR",
+                    "message": "No user found.",
+                }
+
+            if user.role.id is not PROPERTY_MANAGER:
+                return 403, {
+                    "status": "ERROR",
+                    "message": "Permission denied. Property manager only.",
+                }
+
+            user.first_name = payload.first_name
+            user.last_name = payload.last_name
+            user.save(update_fields=["first_name", "last_name"])
+
+    except Exception as e:
+        return 400, {
+            "status": "ERROR",
+            "message": f"Could not fetch users. {str(e)}",
+        }
+
+    return 200, {
+        "status": "SUCCESS",
+        "message": "Successfully updated property manager.",
+        "data": None
+    }
 
 #   *************************** ALL ***************************************
 
