@@ -19,7 +19,12 @@ def get_user_from_token(token: str):
 
         user_id = payload.get("id")
 
-        return User.objects.filter(id=int(user_id)).first()
+        user = User.objects.filter(id=int(user_id)).first()
+
+        if user and not user.is_active:
+            raise HttpError(401, "Account has been deactivated.")
+
+        return user
 
     except ExpiredSignatureError:
         raise HttpError(401, "Token expired!")
