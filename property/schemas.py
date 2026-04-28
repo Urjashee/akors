@@ -42,7 +42,7 @@ class AddProperty(BaseModel):
     id: Optional[int] = None
     manager_id: Optional[int] = None
     name: str
-    state_registration: str
+    # state_registration: str
     property_management_company: str
     address_line_1: str
     address_line_2: str

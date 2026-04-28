@@ -31,7 +31,7 @@ class UnitClass(models.Model):
 
 class PropertyManagement(models.Model):
     name = models.CharField(max_length=500)
-    state_registration = models.CharField(max_length=10)
+    state_registration = models.CharField(max_length=10, null=True)
     property_management_company = models.CharField(max_length=500)
     address_line_1 = models.CharField(max_length=500)
     address_line_2 = models.CharField(max_length=500, null=True)
