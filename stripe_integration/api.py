@@ -6,7 +6,8 @@ from accounts.models import User
 from accounts.auth_roles_middleware import PropertyManagerAuth, SuperAdminAuth
 from stripe_integration.schemas import CreateCustomerSchema, ErrorSchema, SuccessSchema, CreateSubscriptionSchema, \
     UpdateSubscriptionSchema, UpdatePaymentMethod
-from stripe_integration.services import create_customer, create_subscription, cancel_subscription, \
+from stripe_integration.services import create_customer, create_subscription, \
+    cancel_subscription as cancel_stripe_subscription, \
     get_subscription_details, get_upcoming_invoice, update_default_card, get_payment_method, get_all_invoice, \
     create_session, update_web_hook, get_invoice_details, get_sub_details, has_active_subscription
 
@@ -96,12 +97,16 @@ def stripe_webhook(request):
 
         user_id = session["metadata"]["user_id"]
         subscription_type = session["metadata"]["subscription_type_id"]
-        subscription_id = session["subscription"]
+        new_subscription_id = session["subscription"]
 
         user = User.objects.filter(id=user_id).first()
 
         if user:
-            user.stripe_subscription_id = subscription_id
+            # Cancel the old subscription if the user is upgrading/changing plan
+            if user.stripe_subscription_id and user.stripe_subscription_id != new_subscription_id:
+                cancel_stripe_subscription(user.stripe_subscription_id)
+
+            user.stripe_subscription_id = new_subscription_id
             user.subscription_id = subscription_type
             user.is_subscribed = True
             user.save()
@@ -136,7 +141,7 @@ def cancel_subscription(request):
             user = User.objects.filter(email=request.user.email).first()
 
             if user.stripe_subscription_id:
-                delete_subscription = cancel_subscription(user.stripe_subscription_id)
+                delete_subscription = cancel_stripe_subscription(user.stripe_subscription_id)
                 if not delete_subscription:
                     return 400, {"status": "ERROR", "message": "Could not delete subscription"}
 

@@ -624,11 +624,22 @@ def delete_unit_image(
     response={200: SuccessSchema[UnitListData], 400: ErrorSchema},
 )
 def get_units(request, property_id: int, pagination: PaginationSchema = Query(...)):
-    # print(property_id)
-    # if request.user.role.id == OPERATOR:
-    #     units = Unit.objects.filter(user=request.user.id, property=property_id)
-    # else:
-    units = Unit.objects.filter(property=property_id)
+    user = request.user
+
+    if user.role.id == SUPER_ADMIN:
+        units = Unit.objects.filter(property=property_id).order_by("created_at")
+
+    elif user.role.id == PROPERTY_MANAGER:
+        limit = user.subscription.units if user.subscription else 0
+        units = Unit.objects.filter(property=property_id).order_by("created_at")[:limit]
+
+    elif user.role.id == OPERATOR:
+        if not user.property_id and not user.is_subscribed:
+            return 400, {"status": "ERROR", "message": "Subscription required."}
+        units = Unit.objects.filter(property=property_id).order_by("created_at")
+
+    else:
+        units = Unit.objects.none()
 
     page_data = paginate_queryset(units, pagination.current_page, pagination.page_size)
 
