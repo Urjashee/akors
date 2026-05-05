@@ -719,6 +719,9 @@ def add_unit_by_address(request, payload: AddUnitByAddress):
 
                 property_created = True
 
+            if Unit.objects.filter(state_registration=payload.state_registration).exists():
+                return 400, {"status": "ERROR", "message": "State registration already exists."}
+
             unit = Unit.objects.create(
                 nickname=payload.nickname or "",
                 state_registration=payload.state_registration,
