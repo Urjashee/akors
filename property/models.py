@@ -87,6 +87,7 @@ class Images(models.Model):
     user = models.ForeignKey(User, on_delete=models.PROTECT)
     unit = models.ForeignKey(Unit, on_delete=models.CASCADE)
     property = models.ForeignKey(PropertyManagement, on_delete=models.CASCADE)
+    form = models.ForeignKey(PropertyForms, on_delete=models.SET_NULL, null=True, blank=True)
 
     class Meta:
         db_table = "images"

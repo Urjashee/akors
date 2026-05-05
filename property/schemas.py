@@ -92,8 +92,8 @@ class PropertyListData(Schema):
 class UnitFields(BaseModel):
     state_registration: str
     nickname: Optional[str] = None
-    unit_type: int
-    unit_class: int
+    # unit_type: int
+    # unit_class: int
 
 
 class AddEditUnit(UnitFields):
@@ -149,6 +149,10 @@ class AddUnitByAddressResponse(Schema):
     property_id: int
     property_name: str
     property_created: bool
+
+
+class AssignFormToImage(BaseModel):
+    form_id: int
 
 
 

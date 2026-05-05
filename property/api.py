@@ -11,7 +11,7 @@ from accounts.schemas import SuccessSchema, ErrorSchema
 from accounts.services import operator_details, property_manager_details
 from property.models import State, PropertyManagement, Unit, UnitType, UnitClass, Images, UnitForm
 from property.schemas import AddProperty, AssignManager, PropertySchema, AddEditUnit, UploadUnitImage, UploadUnitForm, \
-    UnitSchema, PropertyListData, UnitListData, AddUnitByAddress, AddUnitByAddressResponse
+    UnitSchema, PropertyListData, UnitListData, AddUnitByAddress, AddUnitByAddressResponse, AssignFormToImage
 from core.pagination import PaginationSchema, paginate_queryset
 from accounts.constants import PROPERTY_MANAGER, SUPER_ADMIN, OPERATOR
 from property.services import update_property_forms, get_building_details, get_unit_details, check_if_subscription
@@ -161,37 +161,6 @@ def add_edit_property(request, payload: AddProperty):
                 property_management.save()
                 if request.user.role.id == PROPERTY_MANAGER:
                     update_property_forms(property_management, payload)
-
-            else:
-                print(request.user.role)
-                if request.user.role.id is not OPERATOR:
-                    return 400, {
-                        "status": "ERROR",
-                        "message": "Can't add building details",
-                    }
-
-                property_management = PropertyManagement.objects.create(
-                    name=payload.name,
-                    # state_registration=payload.state_registration,
-                    property_management_company=payload.property_management_company,
-                    address_line_1=payload.address_line_1,
-                    address_line_2=payload.address_line_2,
-                    city=payload.city,
-                    zipcode=payload.zipcode,
-                    state=state,
-                    created_by=request.user,
-                )
-                if not property_management:
-                    return 400, {
-                        "status": "ERROR",
-                        "message": "Form could not be created.",
-                    }
-
-                state_forms = Forms.objects.filter(state=state)
-                PropertyForms.objects.bulk_create([
-                    PropertyForms(property=property_management, form=form)
-                    for form in state_forms
-                ])
 
     except Exception as e:
         return 400, {
@@ -627,6 +596,33 @@ def delete_unit_image(
         return 400, {"status": "ERROR", "message": str(e)}
 
 
+@router.patch(
+    "/unit/image/{image_id}/assign-form",
+    auth=SuperAdminOrPropertyManagerAuth(),
+    response={200: SuccessSchema, 400: ErrorSchema},
+)
+def assign_form_to_image(request, image_id: int, payload: AssignFormToImage):
+    try:
+        image = Images.objects.get(id=image_id)
+        property_form = PropertyForms.objects.get(id=payload.form_id)
+
+        image.form = property_form
+        image.save()
+
+        return 200, {
+            "status": "SUCCESS",
+            "message": "Successfully assigned form to image.",
+            "data": None,
+        }
+
+    except Images.DoesNotExist:
+        return 400, {"status": "ERROR", "message": "Image not found."}
+    except PropertyForms.DoesNotExist:
+        return 400, {"status": "ERROR", "message": "Form not found."}
+    except Exception as e:
+        return 400, {"status": "ERROR", "message": str(e)}
+
+
 @router.get(
     "/units/get/{property_id}",
     response={200: SuccessSchema[UnitListData], 400: ErrorSchema},
@@ -683,8 +679,8 @@ def get_units(request, property_id: int, pagination: PaginationSchema = Query(..
 def add_unit_by_address(request, payload: AddUnitByAddress):
     try:
         state = State.objects.get(id=payload.state_id)
-        unit_type = UnitType.objects.get(id=payload.unit_type)
-        unit_class = UnitClass.objects.get(id=payload.unit_class)
+        # unit_type = UnitType.objects.get(id=payload.unit_type)
+        # unit_class = UnitClass.objects.get(id=payload.unit_class)
 
         with transaction.atomic():
             # Find existing property matching the address
@@ -726,8 +722,8 @@ def add_unit_by_address(request, payload: AddUnitByAddress):
             unit = Unit.objects.create(
                 nickname=payload.nickname or "",
                 state_registration=payload.state_registration,
-                unit_type=unit_type,
-                unit_class=unit_class,
+                # unit_type=unit_type,
+                # unit_class=unit_class,
                 user=request.user,
                 property=property_management,
             )
