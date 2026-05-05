@@ -133,6 +133,25 @@ class UnitListData(Schema):
     total_pages: int
 
 
+class AddUnitByAddress(BaseModel):
+    address_line_1: str
+    address_line_2: Optional[str] = None
+    city: str
+    zipcode: Optional[str] = None
+    state_id: int
+    state_registration: str
+    nickname: Optional[str] = None
+    unit_type: int
+    unit_class: int
+
+
+class AddUnitByAddressResponse(Schema):
+    unit_id: int
+    property_id: int
+    property_name: str
+    property_created: bool
+
+
 
 
 

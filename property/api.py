@@ -11,7 +11,7 @@ from accounts.schemas import SuccessSchema, ErrorSchema
 from accounts.services import operator_details, property_manager_details
 from property.models import State, PropertyManagement, Unit, UnitType, UnitClass, Images, UnitForm
 from property.schemas import AddProperty, AssignManager, PropertySchema, AddEditUnit, UploadUnitImage, UploadUnitForm, \
-    UnitSchema, PropertyListData, UnitListData
+    UnitSchema, PropertyListData, UnitListData, AddUnitByAddress, AddUnitByAddressResponse
 from core.pagination import PaginationSchema, paginate_queryset
 from accounts.constants import PROPERTY_MANAGER, SUPER_ADMIN, OPERATOR
 from property.services import update_property_forms, get_building_details, get_unit_details, check_if_subscription
@@ -664,3 +664,78 @@ def get_units(request, property_id: int, pagination: PaginationSchema = Query(..
             "total_pages": page_data["total_pages"],
         },
     }
+
+
+@router.post(
+    "/unit/add-by-address",
+    response={200: SuccessSchema[AddUnitByAddressResponse], 400: ErrorSchema},
+)
+def add_unit_by_address(request, payload: AddUnitByAddress):
+    try:
+        state = State.objects.get(id=payload.state_id)
+        unit_type = UnitType.objects.get(id=payload.unit_type)
+        unit_class = UnitClass.objects.get(id=payload.unit_class)
+
+        with transaction.atomic():
+            property_management = PropertyManagement.objects.filter(
+                address_line_1__iexact=payload.address_line_1,
+                address_line_2__iexact=payload.address_line_2,
+                city__iexact=payload.city,
+                zipcode__iexact=payload.zipcode,
+                state=state,
+            ).first()
+
+            property_created = False
+            if property_management is None:
+                elevator_count = PropertyManagement.objects.filter(
+                    name__startswith="Elevator"
+                ).count()
+                elevator_name = f"Elevator {str(elevator_count + 1).zfill(3)}"
+
+                property_management = PropertyManagement.objects.create(
+                    name=elevator_name,
+                    property_management_company="",
+                    address_line_1=payload.address_line_1,
+                    address_line_2=payload.address_line_2,
+                    city=payload.city,
+                    zipcode=payload.zipcode,
+                    state=state,
+                    created_by=request.user,
+                )
+
+                state_forms = Forms.objects.filter(state=state)
+                PropertyForms.objects.bulk_create([
+                    PropertyForms(property=property_management, form=form)
+                    for form in state_forms
+                ])
+
+                property_created = True
+
+            unit = Unit.objects.create(
+                nickname=payload.nickname or "",
+                state_registration=payload.state_registration,
+                unit_type=unit_type,
+                unit_class=unit_class,
+                user=request.user,
+                property=property_management,
+            )
+
+        return 200, {
+            "status": "SUCCESS",
+            "message": "Successfully added unit.",
+            "data": {
+                "unit_id": unit.id,
+                "property_id": property_management.id,
+                "property_name": property_management.name,
+                "property_created": property_created,
+            },
+        }
+
+    except State.DoesNotExist:
+        return 400, {"status": "ERROR", "message": "State not found."}
+    except UnitType.DoesNotExist:
+        return 400, {"status": "ERROR", "message": "Unit type not found."}
+    except UnitClass.DoesNotExist:
+        return 400, {"status": "ERROR", "message": "Unit class not found."}
+    except Exception as e:
+        return 400, {"status": "ERROR", "message": str(e)}
