@@ -41,14 +41,14 @@ class UnitImageSchema(Schema):
 class AddProperty(BaseModel):
     id: Optional[int] = None
     manager_id: Optional[int] = None
-    name: str
+    name: Optional[str] = None
     # state_registration: str
-    property_management_company: str
-    address_line_1: str
-    address_line_2: str
-    city: str
-    zipcode: str
-    state_id: int
+    property_management_company: Optional[str] = None
+    address_line_1: Optional[str] = None
+    address_line_2: Optional[str] = None
+    city: Optional[str] = None
+    zipcode: Optional[str] = None
+    state_id: Optional[str] = None
     forms: Optional[List[int]] = None
 
 class AssignManager(BaseModel):
@@ -89,13 +89,16 @@ class PropertyListData(Schema):
     total: int
     total_pages: int
 
-class AddEditUnit(BaseModel):
-    id: Optional[int] = None
+class UnitFields(BaseModel):
     state_registration: str
-    nickname: str
-    expiration_date: Optional[datetime] = None
+    nickname: Optional[str] = None
     unit_type: int
     unit_class: int
+
+
+class AddEditUnit(UnitFields):
+    id: Optional[int] = None
+    expiration_date: Optional[datetime] = None
     property: int
 
 class UnitPropertySchema(Schema):
@@ -131,6 +134,21 @@ class UnitListData(Schema):
     page_size: int
     total: int
     total_pages: int
+
+
+class AddUnitByAddress(UnitFields):
+    address_line_1: str
+    address_line_2: Optional[str] = None
+    city: str
+    zipcode: Optional[str] = None
+    state_id: int
+
+
+class AddUnitByAddressResponse(Schema):
+    unit_id: int
+    property_id: int
+    property_name: str
+    property_created: bool
 
 
 
