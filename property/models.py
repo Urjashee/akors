@@ -65,7 +65,7 @@ class PropertyForms(models.Model):
 
 class Unit(models.Model):
     nickname = models.CharField(max_length=500)
-    state_registration = models.CharField(max_length=10)
+    state_registration = models.CharField(max_length=10, unique=True)
     certificate = models.ImageField(upload_to="expiration/", null=True, blank=True)
     expiration_date = models.DateField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

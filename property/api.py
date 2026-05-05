@@ -187,6 +187,12 @@ def add_edit_property(request, payload: AddProperty):
                         "message": "Form could not be created.",
                     }
 
+                state_forms = Forms.objects.filter(state=state)
+                PropertyForms.objects.bulk_create([
+                    PropertyForms(property=property_management, form=form)
+                    for form in state_forms
+                ])
+
     except Exception as e:
         return 400, {
             "status": "ERROR",
@@ -458,6 +464,7 @@ def add_edit_unit(request, payload: AddEditUnit = Form(...), certificate: Upload
                         "status": "ERROR",
                         "message": "Can't add building details",
                     }
+
                 unit = Unit.objects.create(
                     nickname=payload.nickname,
                     state_registration=payload.state_registration,
@@ -471,6 +478,8 @@ def add_edit_unit(request, payload: AddEditUnit = Form(...), certificate: Upload
                         "status": "ERROR",
                         "message": "Unit could not be created.",
                     }
+
+                # TODO Give a auto generated name
 
     except Exception as e:
         return 400, {
