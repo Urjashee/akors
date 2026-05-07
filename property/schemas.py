@@ -104,7 +104,7 @@ class AddEditUnit(UnitFields):
 class UnitPropertySchema(Schema):
     id: int
     name: str
-    state_registration: str
+    state_registration: str | None
     property_management_company: str
     address_line_1: str
     address_line_2: str
