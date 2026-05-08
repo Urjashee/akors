@@ -78,18 +78,14 @@ def check_if_subscription(payload, user):
     return False
 
 
-def add_unit_visibility(property_management):
-    print("Payload:", property_management)
-    manager = property_management.manager
-    print("Manager:", manager)
+def add_unit_visibility(manager):
     limit = manager.subscription.units if manager and manager.subscription else 0
     print("Limit:", limit)
-    visible_ids = list(
-        Unit.objects.filter(property=property_management)
-        .order_by("created_at")
-        .values_list("id", flat=True)[:limit]
-    )
-    print("Visible ids:", visible_ids)
+    manager_units = Unit.objects.filter(property__manager=manager)
 
-    Unit.objects.filter(property=property_management, id__in=visible_ids).update(visibility=True)
-    Unit.objects.filter(property=property_management).exclude(id__in=visible_ids).update(visibility=False)
+    visible_ids = list(
+        manager_units.order_by("created_at").values_list("id", flat=True)[:limit]
+    )
+
+    manager_units.filter(id__in=visible_ids).update(visibility=True)
+    manager_units.exclude(id__in=visible_ids).update(visibility=False)

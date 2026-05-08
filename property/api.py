@@ -728,8 +728,10 @@ def add_unit_by_address(request, payload: AddUnitByAddress):
             )
             if not unit:
                 return 400, {"status": "ERROR", "message": "Unit could not be created."}
-
-            add_unit_visibility(property_management)
+            print("Property management:", property_management)
+            if property_management.manager:
+                print("Property manager:", property_management.manager)
+                add_unit_visibility(property_management.manager)
 
         return 200, {
             "status": "SUCCESS",
