@@ -68,6 +68,7 @@ class Unit(models.Model):
     state_registration = models.CharField(max_length=10, unique=True)
     certificate = models.ImageField(upload_to="expiration/", null=True, blank=True)
     expiration_date = models.DateField(null=True, blank=True)
+    visibility = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

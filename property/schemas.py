@@ -39,7 +39,7 @@ class UnitImageSchema(Schema):
     url: Optional[str] = None
 
 class AddProperty(BaseModel):
-    id: Optional[int] = None
+    id: int
     manager_id: Optional[int] = None
     name: Optional[str] = None
     # state_registration: str
@@ -97,7 +97,7 @@ class UnitFields(BaseModel):
 
 
 class AddEditUnit(UnitFields):
-    id: Optional[int] = None
+    id: int = None
     expiration_date: Optional[datetime] = None
     property: int
 

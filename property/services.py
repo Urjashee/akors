@@ -1,4 +1,4 @@
-from property.models import PropertyForms
+from property.models import PropertyForms, Unit
 
 
 def update_property_forms(property_management, payload):
@@ -76,3 +76,20 @@ def check_if_subscription(payload, user):
     if user.property_id:
         return True
     return False
+
+
+def add_unit_visibility(property_management):
+    print("Payload:", property_management)
+    manager = property_management.manager
+    print("Manager:", manager)
+    limit = manager.subscription.units if manager and manager.subscription else 0
+    print("Limit:", limit)
+    visible_ids = list(
+        Unit.objects.filter(property=property_management)
+        .order_by("created_at")
+        .values_list("id", flat=True)[:limit]
+    )
+    print("Visible ids:", visible_ids)
+
+    Unit.objects.filter(property=property_management, id__in=visible_ids).update(visibility=True)
+    Unit.objects.filter(property=property_management).exclude(id__in=visible_ids).update(visibility=False)

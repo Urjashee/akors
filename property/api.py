@@ -14,7 +14,7 @@ from property.schemas import AddProperty, AssignManager, PropertySchema, AddEdit
     UnitSchema, PropertyListData, UnitListData, AddUnitByAddress, AddUnitByAddressResponse, AssignFormToImage
 from core.pagination import PaginationSchema, paginate_queryset
 from accounts.constants import PROPERTY_MANAGER, SUPER_ADMIN, OPERATOR
-from property.services import update_property_forms, get_building_details, get_unit_details, check_if_subscription
+from property.services import update_property_forms, get_building_details, get_unit_details, check_if_subscription, add_unit_visibility
 from forms.models import Forms
 from property.models import PropertyForms
 from stripe_integration.services import get_all_invoice, get_invoice_details
@@ -448,7 +448,6 @@ def add_edit_unit(request, payload: AddEditUnit = Form(...), certificate: Upload
                         "message": "Unit could not be created.",
                     }
 
-                # TODO Give a auto generated name
 
     except Exception as e:
         return 400, {
@@ -693,9 +692,9 @@ def add_unit_by_address(request, payload: AddUnitByAddress):
             property_created = False
             if property_management is None:
                 elevator_count = PropertyManagement.objects.filter(
-                    name__startswith="Elevator"
+                    name__startswith="BLDG"
                 ).count()
-                elevator_name = f"Elevator {str(elevator_count + 1).zfill(3)}"
+                elevator_name = f"BLDG {str(elevator_count + 1).zfill(3)}"
 
                 property_management = PropertyManagement.objects.create(
                     name=elevator_name,
@@ -727,6 +726,10 @@ def add_unit_by_address(request, payload: AddUnitByAddress):
                 user=request.user,
                 property=property_management,
             )
+            if not unit:
+                return 400, {"status": "ERROR", "message": "Unit could not be created."}
+
+            add_unit_visibility(property_management)
 
         return 200, {
             "status": "SUCCESS",
