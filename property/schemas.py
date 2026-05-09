@@ -81,6 +81,7 @@ class PropertySchema(Schema):
     manager: Optional[ManagerSchema] = None
     forms: list[PropertyFormSchema]
     unit_count: int
+    has_visible_units: Optional[bool] = None
 
 class PropertyListData(Schema):
     properties: List[PropertySchema]

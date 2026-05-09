@@ -80,7 +80,7 @@ def check_if_subscription(payload, user):
 
 def add_unit_visibility(manager):
     limit = manager.subscription.units if manager and manager.subscription else 0
-    print("Limit:", limit)
+
     manager_units = Unit.objects.filter(property__manager=manager)
 
     visible_ids = list(

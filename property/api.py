@@ -376,6 +376,18 @@ def search_building(request, query: str = "", pagination: PaginationSchema = Que
             fetch_building_details = get_building_details(building)
             fetch_building_details["forms"] = forms
             fetch_building_details["unit_count"] = unit_count
+
+            if (
+                is_authenticated
+                and current_user.role.id == PROPERTY_MANAGER
+                and building.manager_id == current_user.id
+            ):
+                fetch_building_details["has_visible_units"] = Unit.objects.filter(
+                    property=building, visibility=True
+                ).exists()
+            else:
+                fetch_building_details["has_visible_units"] = True
+
             result.append(fetch_building_details)
 
         return 200, {
@@ -633,8 +645,8 @@ def get_units(request, property_id: int, pagination: PaginationSchema = Query(..
         units = Unit.objects.filter(property=property_id).order_by("created_at")
 
     elif user.role.id == PROPERTY_MANAGER:
-        limit = user.subscription.units if user.subscription else 0
-        units = Unit.objects.filter(property=property_id).order_by("created_at")[:limit]
+        # limit = user.subscription.units if user.subscription else 0
+        units = Unit.objects.filter(property=property_id, visibility=True).order_by("created_at")
 
     elif user.role.id == OPERATOR:
         if not user.property_id and not user.is_subscribed:
@@ -728,9 +740,8 @@ def add_unit_by_address(request, payload: AddUnitByAddress):
             )
             if not unit:
                 return 400, {"status": "ERROR", "message": "Unit could not be created."}
-            print("Property management:", property_management)
+
             if property_management.manager:
-                print("Property manager:", property_management.manager)
                 add_unit_visibility(property_management.manager)
 
         return 200, {
