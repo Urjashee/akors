@@ -4,7 +4,8 @@ from django.db import transaction
 from ninja.files import UploadedFile
 from django.db.models import Q
 
-from accounts.auth_roles_middleware import OperatorAuth, SuperAdminAuth, SuperAdminOrPropertyManagerAuth
+from accounts.auth_roles_middleware import OperatorAuth, SuperAdminAuth, SuperAdminOrPropertyManagerAuth, \
+    PropertyManagerAuth
 from accounts.auth import get_user_from_token
 from accounts.models import User
 from accounts.schemas import SuccessSchema, ErrorSchema
@@ -763,3 +764,36 @@ def add_unit_by_address(request, payload: AddUnitByAddress):
         return 400, {"status": "ERROR", "message": "Unit class not found."}
     except Exception as e:
         return 400, {"status": "ERROR", "message": str(e)}
+
+
+@router.get(
+    "/units/get-all",
+    auth=PropertyManagerAuth(),
+    response={200: SuccessSchema, 400: ErrorSchema},
+)
+def get_units(request, pagination: PaginationSchema = Query(...)):
+    user = request.user
+
+    # TODO 1. get all the properties of the user
+    buildings = PropertyManagement.objects.filter(manager=user)
+    print(buildings)
+
+    building_list = []
+    # TODO 2. run loop to get all units of each property
+    for building in buildings:
+        units = Unit.objects.filter(property=building)
+        for unit in units:
+            building_list.append({
+                "id": unit.id,
+                "name": unit.nickname,
+                "state": unit.state_registration,
+                "visibility": unit.visibility,
+                "property_id": building.id,
+                "property_name": building.name,
+            })
+
+    return 200, {
+        "status": "SUCCESS",
+        "message": "Successfully fetched units.",
+        "data": building_list
+    }
