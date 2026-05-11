@@ -12,7 +12,8 @@ from accounts.schemas import SuccessSchema, ErrorSchema
 from accounts.services import operator_details, property_manager_details
 from property.models import State, PropertyManagement, Unit, UnitType, UnitClass, Images, UnitForm
 from property.schemas import AddProperty, AssignManager, PropertySchema, AddEditUnit, UploadUnitImage, UploadUnitForm, \
-    UnitSchema, PropertyListData, UnitListData, AddUnitByAddress, AddUnitByAddressResponse, AssignFormToImage
+    UnitSchema, PropertyListData, UnitListData, AddUnitByAddress, AddUnitByAddressResponse, AssignFormToImage, \
+    VisibilitySchema
 from core.pagination import PaginationSchema, paginate_queryset
 from accounts.constants import PROPERTY_MANAGER, SUPER_ADMIN, OPERATOR
 from property.services import update_property_forms, get_building_details, get_unit_details, check_if_subscription, add_unit_visibility
@@ -774,12 +775,11 @@ def add_unit_by_address(request, payload: AddUnitByAddress):
 def get_units(request, pagination: PaginationSchema = Query(...)):
     user = request.user
 
-    # TODO 1. get all the properties of the user
     buildings = PropertyManagement.objects.filter(manager=user)
     print(buildings)
 
     building_list = []
-    # TODO 2. run loop to get all units of each property
+
     for building in buildings:
         units = Unit.objects.filter(property=building)
         for unit in units:
@@ -796,4 +796,46 @@ def get_units(request, pagination: PaginationSchema = Query(...)):
         "status": "SUCCESS",
         "message": "Successfully fetched units.",
         "data": building_list
+    }
+
+
+@router.post(
+    "/units/visibility-status",
+    auth=PropertyManagerAuth(),
+    response={200: SuccessSchema, 400: ErrorSchema},
+)
+def update_visibility(request, payload: VisibilitySchema):
+    user = request.user
+    limit = user.subscription.units if user.subscription else 0
+
+    visible_count = sum(1 for item in payload.units if item.visibility)
+    if visible_count > limit:
+        return 400, {
+            "status": "ERROR",
+            "message": f"Visible units ({visible_count}) exceed subscription limit ({limit}).",
+            "data": payload.units,
+        }
+
+    payload_map = {item.unit_id: item.visibility for item in payload.units}
+    manager_units = Unit.objects.filter(
+        property__manager=user, id__in=payload_map.keys()
+    )
+
+    if manager_units.count() != len(payload_map):
+        return 400, {
+            "status": "ERROR",
+            "message": "One or more units do not belong to this manager.",
+        }
+
+    with transaction.atomic():
+        for unit in manager_units:
+            new_visibility = payload_map[unit.id]
+            if unit.visibility != new_visibility:
+                unit.visibility = new_visibility
+                unit.save(update_fields=["visibility"])
+
+    return 200, {
+        "status": "SUCCESS",
+        "message": "Successfully updated visibility.",
+        "data": {}
     }

@@ -155,6 +155,15 @@ class AddUnitByAddressResponse(Schema):
 class AssignFormToImage(BaseModel):
     form_id: int
 
+class UnitVisibilityItemSchema(Schema):
+    unit_id: int
+    visibility: bool
+
+
+class VisibilitySchema(Schema):
+    units: List[UnitVisibilityItemSchema]
+
+
 
 
 
