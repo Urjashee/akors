@@ -11,6 +11,7 @@ from stripe_integration.services import create_customer, create_subscription, \
     get_subscription_details, get_upcoming_invoice, update_default_card, get_payment_method, get_all_invoice, \
     create_session, update_web_hook, get_invoice_details, get_sub_details, has_active_subscription
 from property.services import add_unit_visibility
+from property.models import Unit
 
 router = Router(tags=["stripe"])
 
@@ -127,6 +128,8 @@ def stripe_webhook(request):
             user.is_subscribed = False
             user.save()
 
+            Unit.objects.filter(property__manager=user).update(visibility=False)
+
     return 200, {
         "status": "SUCCESS",
         "message": "Subscription updated successfully",
@@ -152,6 +155,8 @@ def cancel_subscription(request):
             user.stripe_subscription_id = None
             user.is_subscribed = False
             user.save()
+
+            Unit.objects.filter(property__manager=user).update(visibility=False)
 
             return 200, {
                 "status": "SUCCESS",
