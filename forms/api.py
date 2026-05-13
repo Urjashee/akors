@@ -6,7 +6,7 @@ from django.db import transaction
 from ninja import File
 from ninja.files import UploadedFile
 
-from accounts.auth_roles_middleware import OperatorAuth, SuperAdminAuth
+from accounts.auth_roles_middleware import OperatorAuth, SuperAdminAuth, SuperAdminOrPropertyManagerAuth
 from accounts.schemas import SuccessSchema, ErrorSchema
 from core import settings
 from forms.models import Forms
@@ -160,7 +160,7 @@ def delete_state(request, payload: DeleteState):
 
 @router.get(
     "/get/{state_id}",
-    auth=SuperAdminAuth(),
+    auth=SuperAdminOrPropertyManagerAuth(),
     response={200: SuccessSchema[FormsListData], 400: ErrorSchema, 403: ErrorSchema},
 )
 def get_forms(request, state_id: int, pagination: PaginationSchema = Query(...)):
