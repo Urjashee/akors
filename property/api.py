@@ -643,25 +643,32 @@ def assign_form_to_image(request, image_id: int, payload: AssignFormToImage):
 
 @router.get(
     "/units/get/{property_id}",
+    auth=None,
     response={200: SuccessSchema[UnitListData], 400: ErrorSchema},
 )
 def get_units(request, property_id: int, pagination: PaginationSchema = Query(...)):
-    user = request.user
+    auth_header = request.headers.get("Authorization", "")
+    token = auth_header.replace("Bearer ", "").strip() if auth_header.startswith("Bearer ") else None
+    current_user = get_user_from_token(token) if token else None
+    is_authenticated = current_user is not None
 
-    if user.role.id == SUPER_ADMIN:
-        units = Unit.objects.filter(property=property_id).order_by("created_at")
+    units = []
+    if is_authenticated:
 
-    elif user.role.id == PROPERTY_MANAGER:
-        # limit = user.subscription.units if user.subscription else 0
-        units = Unit.objects.filter(property=property_id, visibility=True).order_by("created_at")
+        if current_user.role.id == SUPER_ADMIN:
+            units = Unit.objects.filter(property=property_id).order_by("created_at")
 
-    elif user.role.id == OPERATOR:
-        if not user.property_id and not user.is_subscribed:
-            return 400, {"status": "ERROR", "message": "Subscription required."}
-        units = Unit.objects.filter(property=property_id).order_by("created_at")
+        elif current_user.role.id == PROPERTY_MANAGER:
+            # limit = user.subscription.units if user.subscription else 0
+            units = Unit.objects.filter(property=property_id, visibility=True).order_by("created_at")
+
+        elif current_user.role.id == OPERATOR:
+            # if not user.property_id and not user.is_subscribed:
+            #     return 400, {"status": "ERROR", "message": "Subscription required."}
+            units = Unit.objects.filter(property=property_id).order_by("created_at")
 
     else:
-        units = Unit.objects.none()
+        units = Unit.objects.filter(property=property_id).order_by("created_at")
 
     page_data = paginate_queryset(units, pagination.current_page, pagination.page_size)
 
