@@ -138,6 +138,7 @@ def add_edit_property(request, payload: AddProperty):
         with transaction.atomic():
             if payload.id:
                 property_management = PropertyManagement.objects.get(id=payload.id)
+                previous_state_id = property_management.state_id
                 property_management.name = payload.name
                 property_management.property_management_company = payload.property_management_company
                 property_management.address_line_1 = payload.address_line_1
@@ -161,6 +162,10 @@ def add_edit_property(request, payload: AddProperty):
                     # property_management.state_registration = payload.state_registration
                     property_management.manager_id = payload.manager_id
                 property_management.save()
+
+                if previous_state_id != state.id:
+                    PropertyForms.objects.filter(property=property_management).delete()
+
                 if request.user.role.id == PROPERTY_MANAGER:
                     update_property_forms(property_management, payload)
 
