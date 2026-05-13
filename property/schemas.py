@@ -93,8 +93,8 @@ class PropertyListData(Schema):
 class UnitFields(BaseModel):
     state_registration: str
     nickname: Optional[str] = None
-    # unit_type: int
-    # unit_class: int
+    unit_type: Optional[int] = None
+    unit_class: Optional[int] = None
 
 
 class AddEditUnit(UnitFields):
