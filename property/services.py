@@ -33,41 +33,44 @@ def update_property_forms(property_management, payload):
 def get_building_details(building):
     manager = building.manager
     return {
-            "id": building.id,
-            "name": building.name,
-            "address_line_1": building.address_line_1,
-            "address_line_2": building.address_line_2,
-            "city": building.city,
-            "zipcode": building.zipcode,
-            "property_management_company": building.property_management_company,
-            # "state_registration": building.state_registration,
-            "state": {
-                "id": building.state.id,
-                "name": building.state.name
-            },
-            "manager": {
-                "id": manager.id,
-                "first_name": manager.first_name,
-                "last_name": manager.last_name,
-                "email": manager.email,
-            } if manager else None,
-            # "forms": forms
-        }
+        "id": building.id,
+        "name": building.name,
+        "address_line_1": building.address_line_1,
+        "address_line_2": building.address_line_2,
+        "city": building.city,
+        "zipcode": building.zipcode,
+        "property_management_company": building.property_management_company,
+        # "state_registration": building.state_registration,
+        "state": {
+            "id": building.state.id,
+            "name": building.state.name
+        },
+        "manager": {
+            "id": manager.id,
+            "first_name": manager.first_name,
+            "last_name": manager.last_name,
+            "email": manager.email,
+        } if manager else None,
+        # "forms": forms
+    }
+
 
 def get_unit_details(unit, forms, images):
     return {
-            "id": unit.id,
-            "nickname": unit.nickname,
-            "state_registration": unit.state_registration,
-            "expiration_date": unit.expiration_date,
-            "certificate": unit.certificate,
-            "unit_type": unit.unit_type,
-            "unit_class": unit.unit_class,
-            "user": unit.user,
-            "property": unit.property,
-            "forms": forms,
-            "images": images,
-        }
+        "id": unit.id,
+        "nickname": unit.nickname,
+        "state_registration": unit.state_registration,
+        "expiration_date": unit.expiration_date,
+        "certificate": unit.certificate,
+        "unit_type": unit.unit_type,
+        "unit_class": unit.unit_class,
+        "user": unit.user,
+        "property": unit.property,
+        "forms": forms,
+        "images": images,
+        "is_visible": unit.visibility,
+    }
+
 
 def check_if_subscription(payload, user):
     # check if user has active subscription in stripe

@@ -127,6 +127,7 @@ class UnitSchema(Schema):
     images: List[UnitImageSchema] | None
     forms_count: int | None = 0
     images_count: int | None = 0
+    is_visible: Optional[bool] = None
 
 
 class UnitListData(Schema):
