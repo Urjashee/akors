@@ -197,6 +197,43 @@ def update_default_card(customer_id, subscription_id, payment_method_id):
 
 
 def get_invoice_details(invoice):
+    payment_details = None
+
+    try:
+        full_invoice = stripe.Invoice.retrieve(
+            invoice.id,
+            expand=["payments"]
+        )
+
+        payments = full_invoice.get("payments", {}).get("data", [])
+
+        if payments:
+            payment_obj = payments[0]
+
+            payment_data = payment_obj.get("payment", {})
+
+            payment_intent_id = payment_data.get("payment_intent")
+
+            if payment_intent_id:
+                payment_intent = stripe.PaymentIntent.retrieve(
+                    payment_intent_id,
+                    expand=["payment_method"]
+                )
+
+                payment_method = payment_intent.get("payment_method")
+
+                if payment_method and payment_method.get("card"):
+                    payment_details = {
+                        "card_holder_name": payment_method.get("billing_details", {}).get("name"),
+                        "brand": payment_method["card"].get("brand"),
+                        "last4": payment_method["card"].get("last4"),
+                        "exp_month": payment_method["card"].get("exp_month"),
+                        "exp_year": payment_method["card"].get("exp_year"),
+                    }
+
+    except Exception as e:
+        print("Payment detail error:", str(e))
+
     return {
         "invoice_id": invoice.id,
         "invoice_number": invoice.number,
@@ -204,9 +241,9 @@ def get_invoice_details(invoice):
         "currency": invoice.currency,
         "status": invoice.status,
         "invoice_date": invoice.created,
-        "invoice_pdf": invoice.invoice_pdf
+        "invoice_pdf": invoice.invoice_pdf,
+        "payment_details": payment_details
     }
-
 
 def get_sub_details(subscription, item, history, payment_method, active_subscription):
     return {
