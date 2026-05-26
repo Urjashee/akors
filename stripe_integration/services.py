@@ -58,6 +58,11 @@ def create_session(user, payload, settings):
                     "quantity": 1,
                 }
             ],
+            subscription_data={
+                "payment_settings": {
+                    "save_default_payment_method": "on_subscription"
+                }
+            },
             success_url=f"{settings.FRONTEND_URL}/subscription-success?session_id={{CHECKOUT_SESSION_ID}}",
             cancel_url=f"{settings.FRONTEND_URL}/subscription-cancel",
             metadata={
