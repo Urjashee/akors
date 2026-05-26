@@ -70,6 +70,24 @@ def create_session(user, payload, settings):
         print("Stripe Error:", str(e))
         return None
 
+def update_payment_method(new_subscription_id, user):
+    try:
+        subscription = stripe.Subscription.retrieve(new_subscription_id)
+
+        default_payment_method = subscription.default_payment_method
+
+        if default_payment_method:
+            return stripe.Customer.modify(
+                user.customer_id,
+                invoice_settings={
+                    "default_payment_method": default_payment_method
+                }
+            )
+
+    except stripe.StripeError as e:
+        print("Stripe Error:", str(e))
+        return None
+
 
 def update_web_hook(payload, sig_header):
     try:

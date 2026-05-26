@@ -9,7 +9,8 @@ from stripe_integration.schemas import CreateCustomerSchema, ErrorSchema, Succes
 from stripe_integration.services import create_customer, create_subscription, \
     cancel_subscription as cancel_stripe_subscription, \
     get_subscription_details, get_upcoming_invoice, update_default_card, get_payment_method, get_all_invoice, \
-    create_session, update_web_hook, get_invoice_details, get_sub_details, has_active_subscription
+    create_session, update_web_hook, get_invoice_details, get_sub_details, has_active_subscription, \
+    update_payment_method
 from property.services import add_unit_visibility
 from property.models import Unit
 
@@ -94,7 +95,6 @@ def stripe_webhook(request):
     event = update_web_hook(payload, sig_header)
 
     if event["type"] == "checkout.session.completed":
-
         session = event["data"]["object"]
 
         user_id = session["metadata"]["user_id"]
@@ -115,6 +115,8 @@ def stripe_webhook(request):
 
             user.refresh_from_db(fields=["subscription"])
             add_unit_visibility(user)
+
+        update_payment_method(new_subscription_id, user)
 
     elif event["type"] == "customer.subscription.deleted":
 
