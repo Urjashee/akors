@@ -7,7 +7,6 @@ User = get_user_model()
 
 def get_user_from_token(token: str):
     try:
-
         payload = jwt.decode(
             token,
             settings.JWT_SECRET_KEY,
@@ -15,13 +14,24 @@ def get_user_from_token(token: str):
         )
 
         if payload.get("type") != "access":
-            return None
+            raise HttpError(401, "Invalid token type.")
 
         user_id = payload.get("id")
 
-        user = User.objects.filter(id=int(user_id)).first()
+        if not user_id:
+            raise HttpError(401, "Invalid token!")
 
-        if user and not user.is_active:
+        try:
+            user_id = int(user_id)
+        except (TypeError, ValueError):
+            raise HttpError(401, "Invalid token!")
+
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            raise HttpError(401, "Unauthorized.")
+
+        if not user.is_active:
             raise HttpError(401, "Account has been deactivated.")
 
         return user
