@@ -1029,7 +1029,7 @@ def property_manager_user_list(request, pagination: PaginationSchema = Query(...
                     "Invited"
                     if user.email_verified_at is None
                     else "Active" if user.is_active
-                    else "Pending"
+                    else "Inactive"
                 ),
                 "title": {
                     "id": user.title.id,
