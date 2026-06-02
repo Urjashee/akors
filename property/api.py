@@ -69,7 +69,7 @@ def assign_manager(request, payload: AssignManager):
 
 @router.get(
     "/get-user-details/{user_id}",
-    auth=SuperAdminAuth(),
+    auth=SuperAdminOrPropertyManagerAuth(),
     response={200: SuccessSchema, 400: ErrorSchema},
 )
 def get_user_details(request, user_id: int):
