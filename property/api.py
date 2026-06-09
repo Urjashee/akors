@@ -615,14 +615,14 @@ def delete_unit_image(
 
 
 @router.patch(
-    "/unit/image/{image_id}/assign-form",
+    "/unit/image/{image_id}/{property_id}/assign-form",
     auth=SuperAdminOrPropertyManagerAuth(),
     response={200: SuccessSchema, 400: ErrorSchema},
 )
-def assign_form_to_image(request, image_id: int, payload: AssignFormToImage):
+def assign_form_to_image(request, image_id: int, property_id: int, payload: AssignFormToImage):
     try:
         image = Images.objects.get(id=image_id)
-        property_form = PropertyForms.objects.get(id=payload.form_id)
+        property_form = PropertyForms.objects.get(form=payload.form_id, property=property_id)
 
         image.form = property_form
         image.save()
