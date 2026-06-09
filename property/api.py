@@ -665,7 +665,7 @@ def get_units(request, property_id: int, pagination: PaginationSchema = Query(..
 
         elif current_user.role.id == PROPERTY_MANAGER:
             # limit = user.subscription.units if user.subscription else 0
-            units = Unit.objects.filter(property=property_id, visibility=True).order_by("created_at")
+            units = Unit.objects.filter(property=property_id).order_by("created_at")
 
         elif current_user.role.id == OPERATOR:
             # if not user.property_id and not user.is_subscribed:
