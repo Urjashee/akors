@@ -55,7 +55,18 @@ def get_building_details(building):
     }
 
 
-def get_unit_details(unit, forms, images):
+def get_unit_details(unit, forms, images, current_user):
+    # print("current_user", getattr(current_user, "property_id", None))
+    # print("current_user_role", getattr(current_user.role, "id", None) if current_user else None)
+
+    is_visible = unit.visibility
+
+    if (
+            current_user is not None
+            and current_user.role.id == 3
+            and current_user.property_id is not None
+    ):
+        is_visible = True
     return {
         "id": unit.id,
         "nickname": unit.nickname,
@@ -68,7 +79,7 @@ def get_unit_details(unit, forms, images):
         "property": unit.property,
         "forms": forms,
         "images": images,
-        "is_visible": unit.visibility,
+        "is_visible": is_visible,
     }
 
 

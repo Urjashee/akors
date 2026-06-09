@@ -677,7 +677,7 @@ def get_units(request, property_id: int, pagination: PaginationSchema = Query(..
         forms = UnitForm.objects.filter(unit=unit.id)
         images = Images.objects.filter(unit=unit.id)
 
-        fetch_unit_data = get_unit_details(unit, forms, images)
+        fetch_unit_data = get_unit_details(unit, forms, images, current_user)
         fetch_unit_data['forms_count'] = len(forms)
         fetch_unit_data['images_count'] = len(images)
 
