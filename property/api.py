@@ -336,8 +336,8 @@ def search_building(request, query: str = "", pagination: PaginationSchema = Que
             elif current_user.role.id == OPERATOR:
                 buildings = buildings.filter(created_by=current_user)
 
-        if not is_authenticated and (not query or not query.strip()):
-            return 400, {"status": "ERROR", "message": "Query cannot be empty."}
+        # if not is_authenticated and (not query or not query.strip()):
+        #     return 400, {"status": "ERROR", "message": "Query cannot be empty."}
 
         if query and query.strip():
             buildings = buildings.filter(
