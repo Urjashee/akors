@@ -623,8 +623,13 @@ def assign_form_to_image(request, image_id: int, property_id: int, payload: Assi
     try:
         image = Images.objects.get(id=image_id)
         property_form = PropertyForms.objects.get(form=payload.form_id, property=property_id)
+        if not property_form:
+            return 400, {
+                "status": "ERROR",
+                "message": "Property form could not be found.",
+            }
 
-        image.form = property_form
+        image.form = payload.form_id
         image.save()
 
         return 200, {
@@ -700,9 +705,20 @@ def get_units(request, property_id: int, pagination: PaginationSchema = Query(..
 
     data = []
     for unit in page_data["items"]:
+        all_image = []
         images = Images.objects.filter(unit=unit.id)
+        # print("Images", images)
+        for image in images:
+            all_image.append(
+                {
+                    "id": image.id,
+                    "url": image.url.url if image.url else None,
+                    "form_id": image.form.form_id if image.form_id else None,
+                }
+            )
 
-        fetch_unit_data = get_unit_details(unit, forms, images, current_user)
+        fetch_unit_data = get_unit_details(unit, forms, current_user)
+        fetch_unit_data['images'] = all_image
         fetch_unit_data['forms_count'] = len(forms)
         fetch_unit_data['images_count'] = len(images)
 

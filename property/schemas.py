@@ -37,6 +37,7 @@ class UnitFormSchema(Schema):
 class UnitImageSchema(Schema):
     id: int
     url: Optional[str] = None
+    form_id: Optional[int] = None
 
 class AddProperty(BaseModel):
     id: int

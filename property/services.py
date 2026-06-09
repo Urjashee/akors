@@ -55,7 +55,7 @@ def get_building_details(building):
     }
 
 
-def get_unit_details(unit, forms, images, current_user):
+def get_unit_details(unit, forms, current_user):
     # print("current_user", getattr(current_user, "property_id", None))
     # print("current_user_role", getattr(current_user.role, "id", None) if current_user else None)
 
@@ -78,7 +78,7 @@ def get_unit_details(unit, forms, images, current_user):
         "user": unit.user,
         "property": unit.property,
         "forms": forms,
-        "images": images,
+        # "images": images,
         "is_visible": is_visible,
     }
 
