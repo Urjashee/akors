@@ -123,7 +123,7 @@ class UnitSchema(Schema):
     unit_class: UnitClassSchema | None
     user: CreatedBySchema | None
     property: UnitPropertySchema | None
-    forms: List[UnitFormSchema] | None
+    forms: List[PropertyFormSchema] | None
     images: List[UnitImageSchema] | None
     forms_count: int | None = 0
     images_count: int | None = 0

@@ -672,9 +672,34 @@ def get_units(request, property_id: int, pagination: PaginationSchema = Query(..
 
     page_data = paginate_queryset(units, pagination.current_page, pagination.page_size)
 
+    building = PropertyManagement.objects.select_related("state").get(id=property_id)
+    state_forms = Forms.objects.filter(state=building.state).select_related("state")
+    active_forms = set(
+        PropertyForms.objects.filter(property=building).values_list("form_id", flat=True)
+    )
+
+    forms = []
+    if is_authenticated and current_user.role.id in [PROPERTY_MANAGER, SUPER_ADMIN]:
+        for form in state_forms:
+            forms.append({
+                "id": form.id,
+                "name": form.name,
+                "image": form.image.url if form.image else None,
+                "unit_type": form.unit_type.name,
+                "active": 1 if form.id in active_forms else 0,
+            })
+    else:
+        for form in state_forms:
+            if form.id in active_forms:
+                forms.append({
+                    "id": form.id,
+                    "name": form.name,
+                    "image": form.image.url if form.image else None,
+                    "unit_type": form.unit_type.name,
+                })
+
     data = []
     for unit in page_data["items"]:
-        forms = UnitForm.objects.filter(unit=unit.id)
         images = Images.objects.filter(unit=unit.id)
 
         fetch_unit_data = get_unit_details(unit, forms, images, current_user)
