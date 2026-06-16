@@ -767,13 +767,8 @@ def add_unit_by_address(request, payload: AddUnitByAddress):
 
             property_created = False
             if property_management is None:
-                elevator_count = PropertyManagement.objects.filter(
-                    name__startswith="BLDG"
-                ).count()
-                elevator_name = f"BLDG {str(elevator_count + 1).zfill(3)}"
-
                 property_management = PropertyManagement.objects.create(
-                    name=elevator_name,
+                    name="",
                     property_management_company="",
                     address_line_1=payload.address_line_1,
                     address_line_2=payload.address_line_2,
@@ -782,6 +777,8 @@ def add_unit_by_address(request, payload: AddUnitByAddress):
                     state=state,
                     created_by=request.user,
                 )
+                property_management.name = f"BLDG {str(property_management.id).zfill(4)}"
+                property_management.save(update_fields=["name"])
 
                 state_forms = Forms.objects.filter(state=state)
                 PropertyForms.objects.bulk_create([
