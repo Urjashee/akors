@@ -1,4 +1,6 @@
 from typing import List
+
+from django.db.models.functions import Trim
 from ninja import Router, Form, File, Query
 from django.db import transaction
 from ninja.files import UploadedFile
@@ -748,13 +750,20 @@ def add_unit_by_address(request, payload: AddUnitByAddress):
         # unit_class = UnitClass.objects.get(id=payload.unit_class)
 
         with transaction.atomic():
-            property_management = PropertyManagement.objects.filter(
-                address_line_1__iexact=payload.address_line_1,
-                address_line_2__iexact=payload.address_line_2,
-                city__iexact=payload.city,
-                zipcode__iexact=payload.zipcode,
-                state=state,
-            ).first()
+            property_management = (
+                PropertyManagement.objects.annotate(
+                    address1_trimmed=Trim("address_line_1"),
+                    address2_trimmed=Trim("address_line_2"),
+                )
+                .filter(
+                    address1_trimmed__iexact=payload.address_line_1.strip(),
+                    address2_trimmed__iexact=payload.address_line_2.strip(),
+                    city__iexact=payload.city.strip(),
+                    zipcode__iexact=payload.zipcode.strip(),
+                    state=state,
+                )
+                .first()
+            )
 
             property_created = False
             if property_management is None:
@@ -797,6 +806,7 @@ def add_unit_by_address(request, payload: AddUnitByAddress):
                 return 400, {"status": "ERROR", "message": "Unit could not be created."}
 
             if property_management.manager:
+                print("Manager", property_management.manager)
                 add_unit_visibility(property_management.manager)
 
         return 200, {
