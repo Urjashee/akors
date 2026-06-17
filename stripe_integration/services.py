@@ -103,7 +103,10 @@ def update_web_hook(payload, sig_header):
 
 def cancel_subscription(subscription_id):
     try:
-        subscription = stripe.Subscription.delete(subscription_id)
+        subscription = stripe.Subscription.modify(
+            subscription_id,
+            cancel_at_period_end=True
+        )
 
         return {
             "subscription_id": subscription.id,

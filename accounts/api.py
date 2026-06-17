@@ -10,6 +10,7 @@ from django.db.models import F
 from ninja import Query
 from ninja.errors import HttpError
 
+from stripe_integration.services import get_subscription_details
 from .auth_roles_middleware import SuperAdminAuth, PropertyManagerAuth, OperatorAuth
 from .jwt import create_access_token, create_refresh_token
 from core.pagination import PaginationSchema, paginate_queryset
@@ -413,8 +414,10 @@ def reset_password_request(request, payload: VerifyEmailSchema):
 def login(request, payload: LoginSchema):
     try:
         with transaction.atomic():
+            subscription = None
 
             user = User.objects.filter(email=payload.email, is_active=True).first()
+
             if not user:
                 return 401, {
                     "status": "Unauthorized",
@@ -431,10 +434,12 @@ def login(request, payload: LoginSchema):
                     "status": "ERROR",
                     "message": "Please verify your email first.",
                 }
+            if user.stripe_subscription_id:
+                subscription = get_subscription_details(user.stripe_subscription_id)
 
             new_uuid = uuid.uuid4()
             access_token = create_access_token(user)
-            refresh_token = create_refresh_token(user, new_uuid)
+            refresh_token = create_refresh_token(user, subscription)
 
             update_refresh_token = RefreshToken.objects.create(
                 token=refresh_token,

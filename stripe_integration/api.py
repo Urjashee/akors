@@ -154,12 +154,6 @@ def cancel_subscription(request):
                 if not delete_subscription:
                     return 400, {"status": "ERROR", "message": "Could not delete subscription"}
 
-            # user.stripe_subscription_id = None
-            user.is_subscribed = False
-            user.save()
-
-            Unit.objects.filter(property__manager=user).update(visibility=False)
-
             return 200, {
                 "status": "SUCCESS",
                 "message": "Subscription deleted successfully",
