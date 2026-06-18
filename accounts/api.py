@@ -439,7 +439,7 @@ def login(request, payload: LoginSchema):
 
             new_uuid = uuid.uuid4()
             access_token = create_access_token(user)
-            refresh_token = create_refresh_token(user, subscription)
+            refresh_token = create_refresh_token(user, new_uuid)
 
             update_refresh_token = RefreshToken.objects.create(
                 token=refresh_token,
