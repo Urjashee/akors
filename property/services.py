@@ -64,7 +64,7 @@ def get_unit_details(unit, forms, current_user):
     if (
             current_user is not None
             and current_user.role.id == 3
-            and current_user.property_id is not None
+            # and current_user.property_id is not None
     ):
         is_visible = True
     return {
