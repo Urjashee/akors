@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   db:
-    image: postgres:14
+    image: pgvector/pgvector:pg14
     env_file:
       - .env
     environment:
