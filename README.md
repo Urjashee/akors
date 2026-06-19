@@ -26,7 +26,7 @@ docker exec -it akors-backend-web-1 bash
   OPENAI_API_KEY=sk-...                                                                                                                                                             
                                                                                                                                                                                     
   2. Enable PGVector in your PostgreSQL database (run once):                                                                                                                        
-  CREATE EXTENSION IF NOT EXISTS vector;                                                                                                                                            
+  CREATE EXTENSION IF NOT EXISTS vector or rebuild with docker compose;                                                                                                                                            
                                                                                                                                                                                     
   3. Install dependencies:                                                                                                                                                          
   uv add langchain langchain-openai langchain-community langchain-postgres pypdf pgvector "psycopg[binary]"                                                                         
