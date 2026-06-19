@@ -13,7 +13,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -51,7 +51,8 @@ INSTALLED_APPS = [
     'property',
     'stripe_integration',
     'forms',
-    'storages'
+    'storages',
+    'chatbot',
 ]
 
 MIDDLEWARE = [
@@ -183,3 +184,10 @@ STORAGES = {
 # Backward compatibility
 DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
 FRONTEND_URL = os.getenv("SITE_NAME")
+
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+PGVECTOR_CONNECTION_STRING = (
+    f"postgresql+psycopg://{os.getenv('POSTGRES_USER')}:{os.getenv('POSTGRES_PASSWORD')}"
+    f"@{os.getenv('POSTGRES_HOST')}:{os.getenv('POSTGRES_PORT')}/{os.getenv('POSTGRES_DB')}"
+)
