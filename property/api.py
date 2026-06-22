@@ -137,6 +137,7 @@ def get_user_details(request, user_id: int):
 def add_edit_property(request, payload: AddProperty):
     try:
         state = State.objects.get(id=payload.state_id)
+        property_manager = User.objects.get(id=payload.manager_id, role=PROPERTY_MANAGER)
         with transaction.atomic():
             if payload.id:
                 property_management = PropertyManagement.objects.get(id=payload.id)
@@ -163,6 +164,7 @@ def add_edit_property(request, payload: AddProperty):
                         }
                     # property_management.state_registration = payload.state_registration
                     property_management.manager_id = payload.manager_id
+                    add_unit_visibility(property_manager)
                 property_management.save()
 
                 if previous_state_id != state.id:
