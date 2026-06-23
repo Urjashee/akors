@@ -4,6 +4,8 @@ from django.conf import settings
 from accounts.schemas import SuccessSchema, ErrorSchema
 from chatbot.schemas import ChatRequestSchema, ChatResponseData, IngestResponseData
 from chatbot.services import answer_question, ingest_documents, _get_vector_store
+from dotenv import load_dotenv
+import os
 
 router = Router(tags=["chatbot"])
 
@@ -19,6 +21,8 @@ def chat(request, payload: ChatRequestSchema):
             session_id=payload.session_id,
             user=request.user,
         )
+        # load_dotenv()
+        print("Key: ", os.getenv("OPENAI_API_KEY"))
         return 200, {
             "status": "SUCCESS",
             "message": "Answer generated successfully.",

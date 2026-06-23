@@ -9,7 +9,7 @@ from accounts.models import PasswordResets, User
 
 
 def send_welcome_email(user, token, type):
-    subject = "Welcome to Akors 🎉"
+    subject = "Welcome to Hoist Cloud"
     from_email = settings.DEFAULT_FROM_EMAIL
     to = [user.email]
 
@@ -31,7 +31,7 @@ def send_welcome_email(user, token, type):
 
 
 def invite_user_email(user, token, title_data, email_type):
-    subject = "Welcome to Akors 🎉"
+    subject = "Welcome to Hoist Cloud"
     from_email = settings.DEFAULT_FROM_EMAIL
     to = [user.email]
 
@@ -76,7 +76,7 @@ def send_reset_email(user, token, type):
 
 
 def operator_sign_up_email(user, token, type):
-    subject = "Welcome to Akors 🎉"
+    subject = "Welcome to Hoist Cloud"
     from_email = settings.DEFAULT_FROM_EMAIL
     to = [user.email]
 
@@ -98,7 +98,7 @@ def operator_sign_up_email(user, token, type):
 
 
 def create_password_email(user, token, type):
-    subject = "Welcome to Akors 🎉"
+    subject = "Welcome to Hoist Cloud"
     from_email = settings.DEFAULT_FROM_EMAIL
     to = [user.email]
 
@@ -120,7 +120,7 @@ def create_password_email(user, token, type):
 
 
 def user_denied(user, token, type):
-    subject = "Welcome to Akors 🎉"
+    subject = "Welcome to Hoist Cloud"
     from_email = settings.DEFAULT_FROM_EMAIL
     to = [user.email]
 
